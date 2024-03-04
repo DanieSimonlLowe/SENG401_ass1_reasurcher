@@ -10,21 +10,22 @@ class Issue:
     def __init__(self, json, repository):
         self.json_data = json
         self.repository = repository
+        self.commit = None
 
     def get_linked_commit(self):
-        #TODO finish this
-        a = """
-            query: {
-                repository(owner: '""" + self.repository.owner + """', name: '"""+self.repository.name+"""'): {
-                    issue(id: """+self.json_data["node_id"]+"""): {
-                        'timelineItems(first: 5)': {
-                            'nodes': {
-                                '... on ClosedEvent': {
-                                    'closer': {
-                                        '... on PullRequest': "{"
-                                                              "number,\n"
-                                                              "title"
-                                                              "}"
+        if self.commit is not None:
+            return self.commit
+
+        query = """query {
+                repository(owner: \"""" + self.repository.owner + """\", name: \"""" + self.repository.name + """\") {
+                    issue(number: """ + str(self.json_data["number"]) + """) {
+                        timelineItems(first: 50, itemTypes: REFERENCED_EVENT) {
+                            nodes {
+                                ... on ReferencedEvent {
+                                    commit {
+                                        oid
+                                        message
+                                        committedDate
                                     },
                                 },
                             },
@@ -34,16 +35,29 @@ class Issue:
             }
             """
 
-        # a = json.dumps(a)
-        # print(a)
+        # ...
+        # on
+        # PullRequest
+        # {
+        #     id,
+        #     message
+        # }
 
-        req = requests.get(f"{BASE_URL}graphql",
+        req = requests.post(f"{BASE_URL}graphql",
                            headers={
                                'Authorization': f'bearer {TOKEN}',
                            },
-                           data=a
-        )
+                           json={
+                               'query': query
+                           }
+                           )
         print(req.json())
+        commits = req.json()['data']['repository']['issue']['timelineItems']['nodes']
+        print(commits)
+        for commit in commits:
+            if len(commit) > 0:
+                self.commit = commit
+                return commit
 
     def is_valid(self):
         pass
