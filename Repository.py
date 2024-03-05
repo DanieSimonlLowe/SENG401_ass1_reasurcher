@@ -4,12 +4,13 @@ import requests
 
 from constant import TOKEN, BASE_URL
 from Issue import Issue
-
+from git import Repo
 
 class Repository:
     def __init__(self, owner, name):
         self.owner = owner
         self.name = name
+        self.repo = Repo.clone_from(f'https://github.com/{self.owner}/{self.name}', 'holder')
 
     def __str__(self):
         return f'{self.owner}/{self.name}'

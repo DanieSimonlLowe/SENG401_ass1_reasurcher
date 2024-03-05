@@ -1,6 +1,7 @@
 import requests
 import json
 
+from Commit import Commit
 from constant import BASE_URL, TOKEN
 
 
@@ -35,14 +36,6 @@ class Issue:
             }
             """
 
-        # ...
-        # on
-        # PullRequest
-        # {
-        #     id,
-        #     message
-        # }
-
         req = requests.post(f"{BASE_URL}graphql",
                            headers={
                                'Authorization': f'bearer {TOKEN}',
@@ -56,8 +49,8 @@ class Issue:
         print(commits)
         for commit in commits:
             if len(commit) > 0:
-                self.commit = commit
-                return commit
+                self.commit = Commit(self.repository, commit)
+                return self.commit
 
     def is_valid(self):
         pass
