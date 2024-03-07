@@ -53,4 +53,4 @@ class Issue:
                 return self.commit
 
     def is_valid(self):
-        pass
+        return self.get_linked_commit() is not None
