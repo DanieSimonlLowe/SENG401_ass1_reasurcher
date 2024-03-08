@@ -24,6 +24,7 @@ class Commit:
         return text.split('\n')
 
     def get_all_files(self, directory=FILEPATH):
+        self.repository.repo_thread.join()
         out = []
         for root, dirs, files in os.walk(directory):
             for file in files:

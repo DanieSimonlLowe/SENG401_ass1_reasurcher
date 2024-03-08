@@ -1,17 +1,22 @@
+import time
+import datetime
+
 import requests
-import json
 
 from Commit import Commit
 from constant import BASE_URL, TOKEN
 
 
-# https://github.com/orgs/community/discussions/24367
+FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 class Issue:
     def __init__(self, json, repository):
         self.json_data = json
         self.repository = repository
         self.commit = None
+        self.created_date = time.mktime(datetime.datetime.strptime(json['created_at'],FORMAT).timetuple())
+        self.closed_date = time.mktime(datetime.datetime.strptime(json['closed_at'],FORMAT).timetuple())
+        self.fix_time = self.closed_date - self.created_date
 
     def get_linked_commit(self):
         if self.commit is not None:
@@ -44,9 +49,9 @@ class Issue:
                                'query': query
                            }
                            )
-        print(req.json())
+
         commits = req.json()['data']['repository']['issue']['timelineItems']['nodes']
-        print(commits)
+
         for commit in commits:
             if len(commit) > 0:
                 self.commit = Commit(self.repository, commit)
