@@ -13,7 +13,10 @@ class Commit:
         self.total_cyclomatic_complexity = None
         self.repository = repository
         self.json = json
-        self.hash = json['oid']
+        self.lastHash = json['oid']
+
+        log = self.repository.repo.git.log(f'{self.lastHash} --pretty=format:"%h" --no-patch')
+        self.hash = log.split('\n')[1]
 
     def checkout(self):
         self.repository.repo.git.checkout(self.hash)
@@ -37,14 +40,11 @@ class Commit:
         return out
 
     def cyclomatic_complexity(self, files):
-        if self.total_cyclomatic_complexity is not None:
-            return self.total_cyclomatic_complexity
         text = ''
         for file in files:
             with open(file, 'r') as f:
                 # https://radon.readthedocs.io/en/latest/api.html#module-radon.complexity
-                text += f.read()
-                
-        self.total_cyclomatic_complexity = cc_rank(text)
-        return self.total_cyclomatic_complexity
+                text += f.read() + '\n'
+
+        return cc_rank(text)
     
