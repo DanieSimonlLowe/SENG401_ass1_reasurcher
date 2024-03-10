@@ -3,7 +3,7 @@ from Repository import Repository
 rep = Repository('tensorflow', 'tensorflow')
 
 print('test')
-rep.get_issue(1)
+rep.get_random_issues(9)
 
 def get_repositories(path):
     """Reads a list of repository ids in the format: 

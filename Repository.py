@@ -18,6 +18,7 @@ class Repository:
         self.name = name
         self.repo_thread = threading.Thread(target=Repository.set_repo, args=(self,))
         self.repo_thread.start()
+        self.repo_thread.join()
 
     def set_repo(self):
         path = os.path.join('holder', f'{self.owner}_{self.name}')
@@ -39,18 +40,19 @@ class Repository:
         return f"{BASE_URL}search/issues?q=repo:{self}+is:issue+state:closed+labels=bug"
 
     def get_issue_count(self):
-        r = requests.get(self.get_search_url(self),
+        r = requests.get(self.get_search_url(),
                          data={
                              'access_token': TOKEN
                          })
         return r.json()['total_count']
 
+# api has a 10 request limit seemingly per run?
     def get_issue(self, issue_number):
-        r = requests.get(f"{self.get_search_url()}&page={issue_number}",
+        r = requests.get(f"{self.get_search_url()}&page={issue_number}&per_page=1",
                          data={
                              'access_token': TOKEN
                          })
-
+        print(r.json())
         return Issue(r.json()['items'][0], self)
 
     def get_random_issues(self, aim_count):

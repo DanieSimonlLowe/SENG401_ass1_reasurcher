@@ -13,7 +13,8 @@ class Issue:
     def __init__(self, json, repository):
         self.json_data = json
         self.repository = repository
-        self.commit = None
+        self.commit = ''
+        self.commit = self.get_linked_commit()
         self.created_date = time.mktime(datetime.datetime.strptime(json['created_at'],FORMAT).timetuple())
         self.closed_date = time.mktime(datetime.datetime.strptime(json['closed_at'],FORMAT).timetuple())
         self.fix_time = self.closed_date - self.created_date
