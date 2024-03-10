@@ -2,8 +2,8 @@ from Repository import Repository
 
 rep = Repository('tensorflow', 'tensorflow')
 
-print('test')
-rep.get_random_issues(9)
+rep.create_file("text.csv", 1)
+
 
 def get_repositories(path):
     """Reads a list of repository ids in the format: 

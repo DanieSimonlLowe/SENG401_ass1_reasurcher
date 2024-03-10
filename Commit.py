@@ -8,6 +8,16 @@ PYTHON_FILE_EXTENSIONS = {
 }
 
 
+def get_cyclomatic_complexity(files):
+    text = ''
+    for file in files:
+        with open(file, 'r') as f:
+            # https://radon.readthedocs.io/en/latest/api.html#module-radon.complexity
+            text += f.read() + '\n'
+
+    return cc_rank(text)
+
+
 class Commit:
     def __init__(self, repository, json):
         self.total_cyclomatic_complexity = None
@@ -19,17 +29,17 @@ class Commit:
         self.hash = log.split('\n')[1]
 
     def checkout(self):
-        self.repository.repo.git.checkout(self.hash)
+        self.repository.repo.git.cherry_pick(self.hash)
 
     def changed(self):
         text = self.repository.repo.git.diff_tree('--no-commit-id', '--name-only', self.hash, '-r')
 
         return text.split('\n')
 
-    def get_all_files(self, directory=FILEPATH):
+    def get_all_files(self):
         self.repository.repo_thread.join()
         out = []
-        for root, dirs, files in os.walk(directory):
+        for root, dirs, files in os.walk(self.repository.path):
             for file in files:
                 extension = file.split('.')[-1]
                 if extension in PYTHON_FILE_EXTENSIONS:
@@ -39,12 +49,5 @@ class Commit:
 
         return out
 
-    def cyclomatic_complexity(self, files):
-        text = ''
-        for file in files:
-            with open(file, 'r') as f:
-                # https://radon.readthedocs.io/en/latest/api.html#module-radon.complexity
-                text += f.read() + '\n'
-
-        return cc_rank(text)
-    
+    def get_total_cyclomatic_complexity(self):
+        return get_cyclomatic_complexity(self.get_all_files())
