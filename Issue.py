@@ -29,12 +29,15 @@ class Issue:
                             nodes {
                                 ... on ReferencedEvent {
                                     commit {
+                                        id
+                                        oid
+                                        commitUrl
                                         message
                                         committedDate
                                         parents (first:1) {
                                             nodes {
                                                 oid
-                                                treeUrl
+                                                url
                                             }
                                         }
                                     },
@@ -58,12 +61,13 @@ class Issue:
         print(req.json())
         commits = req.json()['data']['repository']['issue']['timelineItems']['nodes']
 
-        print(commits)
         for commit in commits:
             if len(commit) > 0:
                 print(commit)
-                self.commit = Commit(self.repository, commit['commit'])
-                return self.commit
+                commit = Commit(self.repository, commit['commit'])
+                if commit.is_valid():
+                    self.commit = commit
+                    return self.commit
 
     def is_valid(self):
         return self.get_linked_commit() is not None

@@ -21,6 +21,8 @@ class Repository:
         self.repo_thread.start()
         self.repo_thread.join()
 
+        self.branchs = None
+
     def set_repo(self):
         self.path = os.path.join('holder', f'{self.owner}_{self.name}')
         print(self.path + '\n')
@@ -88,3 +90,7 @@ class Repository:
         df = DataFrame({'time': times, 'complexity': complexity})
 
         df.to_csv(file_name, index=False)
+
+    def get_branch(self, oid):
+        if self.branchs is None:
+            req

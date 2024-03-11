@@ -1,7 +1,9 @@
 import os
+
+import requests
 from radon.complexity import cc_rank
 
-from constant import FILEPATH
+from constant import FILEPATH, BASE_URL, TOKEN
 
 PYTHON_FILE_EXTENSIONS = {
     'py', 'pyc', 'pyo', 'pycpp', 'pyi', 'pyd', 'pyw', 'pyz'
@@ -23,23 +25,29 @@ class Commit:
         self.total_cyclomatic_complexity = None
         self.repository = repository
         self.json = json
-        self.lastHash = json['oid']
 
-        log = self.repository.repo.git.log(f'{self.lastHash} --pretty=format:"%h" --no-patch')
-        self.hash = log.split('\n')[1]
+        # log = self.repository.repo.git.log(f'{self.lastHash} --pretty=format:"%h" --no-patch')
+        self.parent = json['parents']['nodes'][0]
+        self.parent_id = self.parent['id']
 
     def checkout(self):
-        self.repository.repo.git.cherry_pick(self.hash)
+
+
+
+        self.repository.repo.git.checkout(self.hash)
 
     def changed(self):
         text = self.repository.repo.git.diff_tree('--no-commit-id', '--name-only', self.hash, '-r')
 
         return text.split('\n')
 
-    def get_all_files(self):
+    def get_all_files(self, directory=None):
+        if directory is None:
+            directory = self.repository.path
+
         self.repository.repo_thread.join()
         out = []
-        for root, dirs, files in os.walk(self.repository.path):
+        for root, dirs, files in os.walk(directory):
             for file in files:
                 extension = file.split('.')[-1]
                 if extension in PYTHON_FILE_EXTENSIONS:
@@ -50,4 +58,8 @@ class Commit:
         return out
 
     def get_total_cyclomatic_complexity(self):
+        self.checkout()
         return get_cyclomatic_complexity(self.get_all_files())
+
+    def is_valid(self):
+        return str(self.repository) in self.parent['url']
