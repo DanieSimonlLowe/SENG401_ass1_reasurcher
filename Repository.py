@@ -2,6 +2,8 @@ import os
 import random
 from time import sleep
 import threading
+
+import git
 from pandas import DataFrame
 import requests
 
@@ -15,14 +17,12 @@ ISSUE_COUNT = 100
 
 # only one of these can exist at a time.
 class Repository:
-    def __init__(self, owner, name):
+    def __init__(self, owner, name, bug_tag):
         self.repo = None
         self.owner = owner
         self.name = name
+        self.bug_tag = bug_tag
         self.path = None
-
-
-        self.branchs = None
 
         self.end_cursor = None
         self.has_next_page = True
@@ -41,13 +41,11 @@ class Repository:
         after = ""
         if self.end_cursor is not None:
             after = f", after: \"{self.end_cursor}\""
-        # ---------------------------------
-        # rename the bug label for each repo
-        # ---------------------------------
+
 
         query = """query {
                         repository(owner: \"""" + self.owner + """\", name: \"""" + self.name + """\") {
-                            issues(states: [CLOSED], labels: "bug", first: """ + str(ISSUE_COUNT) + after + """) {
+                            issues(states: [CLOSED], labels: "type:\"""" + self.bug_tag + """\", first: """ + str(ISSUE_COUNT) + after + """) {
                                 edges {
                                     node {
                                         id
@@ -97,6 +95,7 @@ class Repository:
             self.has_next_page = json['data']['repository']['issues']['pageInfo']['hasNextPage']
             return issues
         except KeyError as e:
+            print('slept')
             sleep(30)
             return self.get_issues_json()
 
@@ -135,7 +134,6 @@ class Repository:
         urls = []
         commits = []
 
-
         for issue in issues:
             times.append(issue.fix_time)
             hashes.append(issue.get_linked_commit().hash)
@@ -152,29 +150,33 @@ class Repository:
         times = []
         hashes = []
         urls = []
-        commits = []
+        complexity = []
         with open(file, 'r') as f:
             lines = f.readlines()
+            print('loading repository data')
+            repo_thread.join()
             for i in range(1, len(lines)):
-                line = lines[i]
+                line = lines[i].split(',')
                 time = line[0]
                 oid = line[1]
                 url = line[2]
                 commit = Commit(self, oid=oid)
+                print(f'{i} out of {len(lines)-1}')
+                try:
+                    complexity.append(commit.get_changed_cyclomatic_complexity())
+                except TabError:
+                    pass
+                except SyntaxError:
+                    pass
+                except git.exc.GitCommandError:
+                    pass
+                else:
+                    times.append(time)
+                    urls.append(url)
+                    hashes.append(oid)
 
-                times.append(time)
-                urls.append(url)
-                hashes.append(oid)
-                commits.append(commit)
 
-        repo_thread.join()
-
-        complexity = []
-        for commit in commits:
-            complexity.append(commit.get_changed_cyclomatic_complexity())
 
         df = DataFrame({'time': times, 'hashes': hashes, 'url': urls, 'complexity': complexity})
 
         df.to_csv(name, index=False)
-
-

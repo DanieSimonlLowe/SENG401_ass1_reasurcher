@@ -11,20 +11,22 @@ PYTHON_FILE_EXTENSIONS = {
 
 
 def get_cyclomatic_complexity(files):
-    print(files)
-    text = ''
+    complexity = 0
+    count = 0
     for file in files:
         try:
             with open(file, 'r') as f:
-                text += f.read() + '\n'
+                text = f.read()
+                vistor = ComplexityVisitor.from_code(text, no_assert=True)
+                complexity += vistor.functions_complexity
+                count += text.count('def ')
         except FileNotFoundError:
             pass
 
-    if text.count('def ') == 0:
+    if count == 0:
         return 0
 
-    vistor = ComplexityVisitor.from_code(text)
-    return vistor.functions_complexity / text.count('def ')
+    return complexity / count
 
 
 

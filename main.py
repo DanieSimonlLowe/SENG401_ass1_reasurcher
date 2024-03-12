@@ -1,7 +1,14 @@
 from Repository import Repository
 
-rep = Repository('pandas-dev', 'pandas')
+# ---------------------------------
+# tensorflow: type:bug
+# pandus: bug
+# ---------------------------------
 
-rep.create_issues_file("text.csv", 5)
+rep = Repository('tensorflow', 'tensorflow', "type:bug")
 
+print('repo created')
 
+rep.create_issues_file("text.csv", 50)
+
+rep.create_commit_file('text.csv', 'output.csv')
