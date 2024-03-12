@@ -131,13 +131,17 @@ class Repository:
         times = []
         hashes = []
         urls = []
+        changed = []
+
+        self.repo_thread.join()
 
         for issue in issues:
             times.append(issue.fix_time)
             hashes.append(issue.get_linked_commit().hash)
             urls.append(issue.json_data['url'])
+            changed.append(issue.get_linked_commit().get_changed_cyclomatic_complexity())
 
-        df = DataFrame({'time': times, 'hashes': hashes, 'url': urls})
+        df = DataFrame({'time': times, 'hashes': hashes, 'url': urls, 'changed': changed})
 
         df.to_csv(file_name, index=False)
 

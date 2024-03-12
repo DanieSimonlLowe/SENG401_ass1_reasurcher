@@ -1,7 +1,7 @@
 import os
 
-import requests
-from radon.complexity import cc_rank
+
+from radon.visitors import ComplexityVisitor
 
 from constant import FILEPATH, BASE_URL, TOKEN
 
@@ -11,13 +11,21 @@ PYTHON_FILE_EXTENSIONS = {
 
 
 def get_cyclomatic_complexity(files):
+    print(files)
     text = ''
     for file in files:
-        with open(file, 'r') as f:
-            # https://radon.readthedocs.io/en/latest/api.html#module-radon.complexity
-            text += f.read() + '\n'
+        try:
+            with open(file, 'r') as f:
+                text += f.read() + '\n'
+        except FileNotFoundError:
+            pass
 
-    return cc_rank(text)
+    if text.count('def ') == 0:
+        return 0
+
+    vistor = ComplexityVisitor.from_code(text)
+    return vistor.functions_complexity / text.count('def ')
+
 
 
 class Commit:
@@ -34,7 +42,12 @@ class Commit:
     def changed(self):
         text = self.repository.repo.git.diff_tree('--no-commit-id', '--name-only', self.hash, '-r')
 
-        return text.split('\n')
+        out = []
+        for file in text.split('\n'):
+            extension = file.split('.')[-1]
+            if extension in PYTHON_FILE_EXTENSIONS:
+                out.append(os.path.join(self.repository.path, file))
+        return out
 
     def get_all_files(self, directory=None):
         if directory is None:
@@ -55,6 +68,10 @@ class Commit:
     def get_total_cyclomatic_complexity(self):
         self.checkout()
         return get_cyclomatic_complexity(self.get_all_files())
+
+    def get_changed_cyclomatic_complexity(self):
+        self.checkout()
+        return get_cyclomatic_complexity(self.changed())
 
     def is_valid(self):
         return str(self.repository) in self.json['url']
