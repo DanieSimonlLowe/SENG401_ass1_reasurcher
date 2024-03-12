@@ -23,6 +23,8 @@ class Repository:
 
         self.branchs = None
 
+        self.last_issue = 'null'
+
     def set_repo(self):
         self.path = os.path.join('holder', f'{self.owner}_{self.name}')
         print(self.path + '\n')
@@ -34,47 +36,65 @@ class Repository:
     def __str__(self):
         return f'{self.owner}/{self.name}'
 
-    def get_search_url(self):
-        return f"{BASE_URL}search/issues?q=repo:{self}+is:issue+state:closed+labels=bug&per_page=100"
-
     def get_issues_json(self):
-        r = requests.get(self.get_search_url(),
-                         headers={
-                             'Authorization': f'bearer {TOKEN}',
-                         })
-        return r.json()
+        query = """query {
+                        repository(owner: \"""" + self.owner + """\", name: \"""" + self.name + """\") {
+                            issues(states: [CLOSED], first: 100 after: """ + self.last_issue + """) {
+                                edges {
+                                    node {
+                                        id
+                                        createdAt
+                                        closedAt
+                                        timelineItems(first: 50, itemTypes: REFERENCED_EVENT) {
+                                            nodes {
+                                                ... on ReferencedEvent {
+                                                    commit {
+                                                        oid
+                                                        url
+                                                        committedDate
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    }
+                                }
+                            },
+                        },
+                    }
+                    """
 
-    # api has a 10 request limit seemingly per run?
-    def get_issue(self, issue_number, json):
-        # r = requests.get(f"{self.get_search_url()}&page={issue_number}&per_page=1",
-        #                  headers={
-        #                      'Authorization': f'bearer {TOKEN}',
-        #                  })
-        #
-        # print(r.json())
-        return Issue(json['items'][issue_number], self)
+        req = requests.post(f"{BASE_URL}graphql",
+                            headers={
+                                'Authorization': f'bearer {TOKEN}',
+                            },
+                            json={
+                                'query': query
+                            }
+                            )
+        json = req.json()
+        issues = json['data']['repository']['issues']['edges']
+        self.last_issue = issues[-1]['node']['id']
+        return issues
 
     def get_random_issues(self, aim_count):
         looked = set()
         issues = []
         json = self.get_issues_json()
 
-        total_count = json['total_count']
-        end = len(json['items'])
-        start = 0
-        if total_count < aim_count:
-            aim_count = total_count
+        end = 100
 
         while len(issues) < aim_count:
+            if len(looked) > end/2:
+                json = self.get_issues_json()
             look = random.randrange(end)
             while look in looked:
                 look = random.randrange(end)
-            print(look)
-            looked.add(look)
-            issue = self.get_issue(look, json)
-            if issue.is_valid():
-                issues.append(issue)
 
+            looked.add(look)
+            issue = Issue(json, self, look)
+            if issue.is_valid():
+                print(look)
+                issues.append(issue)
 
         return issues
 

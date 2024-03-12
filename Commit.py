@@ -27,14 +27,12 @@ class Commit:
         self.json = json
 
         # log = self.repository.repo.git.log(f'{self.lastHash} --pretty=format:"%h" --no-patch')
-        self.parent = json['parents']['nodes'][0]
-        self.parent_id = self.parent['id']
+        # self.parent = json['parents']['nodes'][0]
+        # self.parent_id = self.parent['oid']
 
     def checkout(self):
 
-
-
-        self.repository.repo.git.checkout(self.hash)
+        self.repository.repo.git.checkout(self.json['oid'])
 
     def changed(self):
         text = self.repository.repo.git.diff_tree('--no-commit-id', '--name-only', self.hash, '-r')
@@ -62,4 +60,4 @@ class Commit:
         return get_cyclomatic_complexity(self.get_all_files())
 
     def is_valid(self):
-        return str(self.repository) in self.parent['url']
+        return str(self.repository) in self.json['url']
