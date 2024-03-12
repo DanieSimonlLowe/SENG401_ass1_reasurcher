@@ -29,11 +29,15 @@ def get_cyclomatic_complexity(files):
 
 
 class Commit:
-    def __init__(self, repository, json):
+    def __init__(self, repository, json=None, oid=None):
         self.total_cyclomatic_complexity = None
         self.repository = repository
         self.json = json
-        self.hash = self.json["oid"]
+        if json is not None:
+            self.hash = self.json["oid"]
+        if oid is not None:
+            self.hash = oid
+
 
     def checkout(self):
         parent = self.repository.repo.git.rev_parse(f'{self.hash}^')

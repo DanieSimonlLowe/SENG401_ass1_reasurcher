@@ -16,6 +16,7 @@ INVALID_LABELS = [
 
 class Issue:
     def __init__(self, json, repository, index):
+        print(json)
         self.json_data = json[index]['node']
         self.repository = repository
         self.commit = None

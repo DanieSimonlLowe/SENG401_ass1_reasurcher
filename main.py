@@ -1,7 +1,7 @@
 from Repository import Repository
 
-rep = Repository('tensorflow', 'tensorflow')
+rep = Repository('pandas-dev', 'pandas')
 
-rep.create_file("text.csv", 1)
+rep.create_issues_file("text.csv", 5)
 
 

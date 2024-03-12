@@ -5,6 +5,7 @@ import threading
 from pandas import DataFrame
 import requests
 
+from Commit import Commit
 from constant import TOKEN, BASE_URL
 from Issue import Issue
 from git import Repo
@@ -18,10 +19,8 @@ class Repository:
         self.repo = None
         self.owner = owner
         self.name = name
-        self.repo_thread = threading.Thread(target=Repository.set_repo, args=(self,))
         self.path = None
-        self.repo_thread.start()
-        self.repo_thread.join()
+
 
         self.branchs = None
 
@@ -42,10 +41,13 @@ class Repository:
         after = ""
         if self.end_cursor is not None:
             after = f", after: \"{self.end_cursor}\""
+        # ---------------------------------
+        # rename the bug label for each repo
+        # ---------------------------------
 
         query = """query {
                         repository(owner: \"""" + self.owner + """\", name: \"""" + self.name + """\") {
-                            issues(states: [CLOSED], labels: "type:bug", first: """ + str(ISSUE_COUNT) + after + """) {
+                            issues(states: [CLOSED], labels: "bug", first: """ + str(ISSUE_COUNT) + after + """) {
                                 edges {
                                     node {
                                         id
@@ -125,26 +127,54 @@ class Repository:
 
         return issues
 
-    def create_file(self, file_name, issue_count):
+    def create_issues_file(self, file_name, issue_count):
         issues = self.get_random_issues(issue_count)
         print('issues:', len(issues))
         times = []
         hashes = []
         urls = []
-        changed = []
+        commits = []
 
-        self.repo_thread.join()
 
         for issue in issues:
             times.append(issue.fix_time)
             hashes.append(issue.get_linked_commit().hash)
             urls.append(issue.json_data['url'])
-            changed.append(issue.get_linked_commit().get_changed_cyclomatic_complexity())
+            commits.append(issue.get_linked_commit().json['url'])
 
-        df = DataFrame({'time': times, 'hashes': hashes, 'url': urls, 'changed': changed})
+        df = DataFrame({'time': times, 'hashes': hashes, 'url': urls, 'commits': commits})
 
         df.to_csv(file_name, index=False)
 
-    def get_branch(self, oid):
-        if self.branchs is None:
-            pass
+    def create_commit_file(self, file, name):
+        repo_thread = threading.Thread(target=Repository.set_repo, args=(self,))
+        repo_thread.start()
+        times = []
+        hashes = []
+        urls = []
+        commits = []
+        with open(file, 'r') as f:
+            lines = f.readlines()
+            for i in range(1, len(lines)):
+                line = lines[i]
+                time = line[0]
+                oid = line[1]
+                url = line[2]
+                commit = Commit(self, oid=oid)
+
+                times.append(time)
+                urls.append(url)
+                hashes.append(oid)
+                commits.append(commit)
+
+        repo_thread.join()
+
+        complexity = []
+        for commit in commits:
+            complexity.append(commit.get_changed_cyclomatic_complexity())
+
+        df = DataFrame({'time': times, 'hashes': hashes, 'url': urls, 'complexity': complexity})
+
+        df.to_csv(name, index=False)
+
+
