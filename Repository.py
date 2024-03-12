@@ -1,6 +1,6 @@
 import os
 import random
-import shutil
+from time import sleep
 import threading
 from pandas import DataFrame
 import requests
@@ -8,6 +8,8 @@ import requests
 from constant import TOKEN, BASE_URL
 from Issue import Issue
 from git import Repo
+
+ISSUE_COUNT = 100
 
 
 # only one of these can exist at a time.
@@ -23,11 +25,11 @@ class Repository:
 
         self.branchs = None
 
-        self.last_issue = 'null'
+        self.end_cursor = None
+        self.has_next_page = True
 
     def set_repo(self):
         self.path = os.path.join('holder', f'{self.owner}_{self.name}')
-        print(self.path + '\n')
         if os.path.exists(self.path):
             self.repo = Repo(path=self.path)
         else:
@@ -37,14 +39,19 @@ class Repository:
         return f'{self.owner}/{self.name}'
 
     def get_issues_json(self):
+        after = ""
+        if self.end_cursor is not None:
+            after = f", after: \"{self.end_cursor}\""
+
         query = """query {
                         repository(owner: \"""" + self.owner + """\", name: \"""" + self.name + """\") {
-                            issues(states: [CLOSED], first: 100 after: """ + self.last_issue + """) {
+                            issues(states: [CLOSED], labels: "type:bug", first: """ + str(ISSUE_COUNT) + after + """) {
                                 edges {
                                     node {
                                         id
                                         createdAt
                                         closedAt
+                                        url
                                         timelineItems(first: 50, itemTypes: REFERENCED_EVENT) {
                                             nodes {
                                                 ... on ReferencedEvent {
@@ -56,8 +63,18 @@ class Repository:
                                                 },
                                             },
                                         },
-                                    }
-                                }
+                                        
+                                        labels(first: 10) {
+                                            nodes {
+                                                name
+                                            },
+                                        },
+                                    },
+                                },
+                                pageInfo {
+                                    endCursor
+                                    hasNextPage
+                                },
                             },
                         },
                     }
@@ -72,45 +89,58 @@ class Repository:
                             }
                             )
         json = req.json()
-        issues = json['data']['repository']['issues']['edges']
-        self.last_issue = issues[-1]['node']['id']
-        return issues
+        try:
+            issues = json['data']['repository']['issues']['edges']
+            self.end_cursor = json['data']['repository']['issues']['pageInfo']['endCursor']
+            self.has_next_page = json['data']['repository']['issues']['pageInfo']['hasNextPage']
+            return issues
+        except KeyError as e:
+            sleep(30)
+            return self.get_issues_json()
 
     def get_random_issues(self, aim_count):
         looked = set()
         issues = []
         json = self.get_issues_json()
 
-        end = 100
+        bound = ISSUE_COUNT - ISSUE_COUNT / 5
 
         while len(issues) < aim_count:
-            if len(looked) > end/2:
+            if len(looked) > bound:
+                if not self.has_next_page:
+                    break
+
                 json = self.get_issues_json()
-            look = random.randrange(end)
+                looked = set()
+            look = random.randrange(ISSUE_COUNT)
             while look in looked:
-                look = random.randrange(end)
+                look = random.randrange(ISSUE_COUNT)
 
             looked.add(look)
             issue = Issue(json, self, look)
             if issue.is_valid():
-                print(look)
                 issues.append(issue)
+
+                print(f'{len(issues)} out of {aim_count} issues found')
 
         return issues
 
     def create_file(self, file_name, issue_count):
         issues = self.get_random_issues(issue_count)
+        print('issues:', len(issues))
         times = []
-        complexity = []
+        hashes = []
+        urls = []
 
         for issue in issues:
             times.append(issue.fix_time)
-            complexity.append(issue.get_total_cyclomatic_complexity())
+            hashes.append(issue.get_linked_commit().hash)
+            urls.append(issue.json_data['url'])
 
-        df = DataFrame({'time': times, 'complexity': complexity})
+        df = DataFrame({'time': times, 'hashes': hashes, 'url': urls})
 
         df.to_csv(file_name, index=False)
 
     def get_branch(self, oid):
         if self.branchs is None:
-            req
+            pass

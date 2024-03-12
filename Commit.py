@@ -25,14 +25,11 @@ class Commit:
         self.total_cyclomatic_complexity = None
         self.repository = repository
         self.json = json
-
-        # log = self.repository.repo.git.log(f'{self.lastHash} --pretty=format:"%h" --no-patch')
-        # self.parent = json['parents']['nodes'][0]
-        # self.parent_id = self.parent['oid']
+        self.hash = self.json["oid"]
 
     def checkout(self):
-
-        self.repository.repo.git.checkout(self.json['oid'])
+        parent = self.repository.repo.git.rev_parse(f'{self.hash}^')
+        self.repository.repo.git.checkout('-f', parent)
 
     def changed(self):
         text = self.repository.repo.git.diff_tree('--no-commit-id', '--name-only', self.hash, '-r')

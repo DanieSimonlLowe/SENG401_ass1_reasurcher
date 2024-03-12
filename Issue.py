@@ -8,6 +8,11 @@ from constant import BASE_URL, TOKEN
 
 FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
+INVALID_LABELS = [
+    'stat:duplicate',
+    'type:support'
+]
+
 
 class Issue:
     def __init__(self, json, repository, index):
@@ -26,13 +31,19 @@ class Issue:
 
         for commit in commits:
             if len(commit) > 0:
-                print(commit)
+                if commit['commit'] is None:
+                    continue
                 commit = Commit(self.repository, commit['commit'])
                 if commit.is_valid():
                     self.commit = commit
                     return self.commit
 
     def is_valid(self):
+
+        for label in self.json_data['labels']['nodes']:
+            if label['name'] in INVALID_LABELS:
+                return False
+
         return self.get_linked_commit() is not None
 
     def get_total_cyclomatic_complexity(self):
