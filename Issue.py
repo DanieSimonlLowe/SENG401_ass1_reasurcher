@@ -39,8 +39,7 @@ class Issue:
             return None
 
         cs.sort(key=lambda c: time.mktime(datetime.datetime.strptime(c['committedDate'], FORMAT).timetuple()))
-
-        commit = Commit(self, json=cs[-1])
+        commit = Commit(self.repository, json=cs[-1])
 
         if not commit.is_valid():
             return None
