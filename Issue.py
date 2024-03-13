@@ -29,14 +29,24 @@ class Issue:
 
         commits = self.json_data['timelineItems']['nodes']
 
+        cs = []
         for commit in commits:
             if len(commit) > 0:
                 if commit['commit'] is None:
                     continue
-                commit = Commit(self.repository, commit['commit'])
-                if commit.is_valid():
-                    self.commit = commit
-                    return self.commit
+                cs.append(commit['commit'])
+        if len(cs) < 2:
+            return None
+
+        cs.sort(key=lambda c: time.mktime(datetime.datetime.strptime(c['committedDate'], FORMAT).timetuple()))
+
+        commit = Commit(self, json=cs[-1])
+
+        if not commit.is_valid():
+            return None
+
+        self.commit = commit
+        return self.commit
 
     def is_valid(self):
 

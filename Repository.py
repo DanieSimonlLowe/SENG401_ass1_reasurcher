@@ -89,10 +89,13 @@ class Repository:
                             }
                             )
         json = req.json()
+
         try:
             issues = json['data']['repository']['issues']['edges']
             self.end_cursor = json['data']['repository']['issues']['pageInfo']['endCursor']
             self.has_next_page = json['data']['repository']['issues']['pageInfo']['hasNextPage']
+
+            print('new json generated')
             return issues
         except KeyError as e:
             print('slept')

@@ -1,9 +1,11 @@
+import datetime
 import os
-
-
+import time
 from radon.visitors import ComplexityVisitor
 
 from constant import FILEPATH, BASE_URL, TOKEN
+
+FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 PYTHON_FILE_EXTENSIONS = {
     'py', 'pyc', 'pyo', 'pycpp', 'pyi', 'pyd', 'pyw', 'pyz'
@@ -34,7 +36,6 @@ def get_cyclomatic_complexity(files):
     return complexity / count, max, complexity
 
 
-
 class Commit:
     def __init__(self, repository, json=None, oid=None):
         self.total_cyclomatic_complexity = None
@@ -44,7 +45,6 @@ class Commit:
             self.hash = self.json["oid"]
         if oid is not None:
             self.hash = oid
-
 
     def checkout(self):
         parent = self.repository.repo.git.rev_parse(f'{self.hash}^')
