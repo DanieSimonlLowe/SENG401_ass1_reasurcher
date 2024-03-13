@@ -103,25 +103,21 @@ class Repository:
             return self.get_issues_json()
 
     def get_random_issues(self, aim_count):
-        looked = set()
+        look = 0
         issues = []
         json = self.get_issues_json()
 
         bound = ISSUE_COUNT - ISSUE_COUNT / 5
 
         while len(issues) < aim_count:
-            if len(looked) > bound:
+            if look >= ISSUE_COUNT:
                 if not self.has_next_page:
                     break
 
                 json = self.get_issues_json()
-                looked = set()
-            look = random.randrange(ISSUE_COUNT)
-            while look in looked:
-                look = random.randrange(ISSUE_COUNT)
-
-            looked.add(look)
+                look = 0
             issue = Issue(json, self, look)
+            look += 1
             if issue.is_valid():
                 issues.append(issue)
 
