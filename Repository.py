@@ -42,10 +42,10 @@ class Repository:
         if self.end_cursor is not None:
             after = f", after: \"{self.end_cursor}\""
 
-
         query = """query {
                         repository(owner: \"""" + self.owner + """\", name: \"""" + self.name + """\") {
-                            issues(states: [CLOSED], labels: "type:\"""" + self.bug_tag + """\", first: """ + str(ISSUE_COUNT) + after + """) {
+                            issues(states: [CLOSED], labels: "type:\"""" + self.bug_tag + """\", first: """ + str(
+            ISSUE_COUNT) + after + """) {
                                 edges {
                                     node {
                                         id
@@ -150,7 +150,9 @@ class Repository:
         times = []
         hashes = []
         urls = []
-        complexity = []
+        complexity_av = []
+        complexity_max = []
+        complexity_total = []
         with open(file, 'r') as f:
             lines = f.readlines()
             print('loading repository data')
@@ -161,9 +163,13 @@ class Repository:
                 oid = line[1]
                 url = line[2]
                 commit = Commit(self, oid=oid)
-                print(f'{i} out of {len(lines)-1}')
+                print(f'{i} out of {len(lines) - 1}')
                 try:
-                    complexity.append(commit.get_changed_cyclomatic_complexity())
+                    av, m, total = commit.get_changed_cyclomatic_complexity()
+
+                    complexity_av.append(av)
+                    complexity_max.append(m)
+                    complexity_total.append(total)
                 except TabError:
                     pass
                 except SyntaxError:
@@ -175,8 +181,8 @@ class Repository:
                     urls.append(url)
                     hashes.append(oid)
 
-
-
-        df = DataFrame({'time': times, 'hashes': hashes, 'url': urls, 'complexity': complexity})
+        df = DataFrame({'time': times, 'hashes': hashes, 'url': urls,
+                        'average complexity': complexity_av, 'max complexity': complexity_max,
+                        'total complexity': complexity_total})
 
         df.to_csv(name, index=False)
