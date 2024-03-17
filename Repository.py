@@ -17,7 +17,7 @@ ISSUE_COUNT = 100
 
 # only one of these can exist at a time.
 class Repository:
-    def __init__(self, owner, name, bug_tag):
+    def __init__(self, owner, name, bug_tag='bug'):
         self.repo = None
         self.owner = owner
         self.name = name
