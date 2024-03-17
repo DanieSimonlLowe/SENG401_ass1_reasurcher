@@ -86,6 +86,6 @@ class Commit:
 
     def is_valid(self):
         commit_message = self.json['message'].lower()
-        print(commit_message)
-        print(self.json['url'])
+        # print(commit_message)
+        # print(self.json['url'])
         return any(keyword in commit_message for keyword in ["fix"])  # TODO make sure commit is in correct repository

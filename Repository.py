@@ -61,6 +61,11 @@ class Repository:
                                                         committedDate
                                                         message
                                                     },
+                                                    commitRepository {
+                                                        isFork
+                                                        name
+                                                        owner
+                                                    }
                                                 },
                                                 ... on ClosedEvent {
                                                     stateReason
@@ -92,7 +97,6 @@ class Repository:
                             }
                             )
         json = req.json()
-        print(json)
 
         try:
             issues = json['data']['repository']['issues']['edges']
@@ -121,8 +125,8 @@ class Repository:
             issue = Issue(json, self, look)
             look += 1
             if issue.is_valid():
+                print(issue.json_data)
                 issues.append(issue)
-
                 print(f'{len(issues)} out of {aim_count} issues found')
 
         return issues
