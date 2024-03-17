@@ -52,13 +52,14 @@ class Repository:
                                         createdAt
                                         closedAt
                                         url
-                                        timelineItems(first: 50, itemTypes: REFERENCED_EVENT) {
+                                        timelineItems(first: 50, itemTypes: [REFERENCED_EVENT, CLOSED_EVENT]) {
                                             nodes {
                                                 ... on ReferencedEvent {
                                                     commit {
                                                         oid
                                                         url
                                                         committedDate
+                                                        message
                                                     },
                                                 },
                                                 ... on ClosedEvent {
@@ -135,7 +136,7 @@ class Repository:
         commits = []
 
         for issue in issues:
-            times.append(issue.fix_time)
+            times.append(issue.fix_time) # TODO What about commit time minus issue creation time?
             hashes.append(issue.get_linked_commit().hash)
             urls.append(issue.json_data['url'])
             commits.append(issue.get_linked_commit().json['url'])

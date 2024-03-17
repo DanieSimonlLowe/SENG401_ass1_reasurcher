@@ -85,4 +85,7 @@ class Commit:
         return get_cyclomatic_complexity(self.changed())
 
     def is_valid(self):
-        return str(self.repository) in self.json['url']
+        commit_message = self.json['message'].lower()
+        print(commit_message)
+        print(self.json['url'])
+        return any(keyword in commit_message for keyword in ["fix"])  # TODO make sure commit is in correct repository

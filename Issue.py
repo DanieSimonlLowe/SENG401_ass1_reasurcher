@@ -32,7 +32,9 @@ class Issue:
         cs = []
         for commit in commits:
             if len(commit) > 0:
-                if commit['commit'] is None:
+                if 'commit' not in commit:
+                    continue
+                elif commit['commit'] is None:
                     continue
                 cs.append(commit['commit'])
         if len(cs) < 1:
