@@ -61,6 +61,9 @@ class Repository:
                                                         committedDate
                                                     },
                                                 },
+                                                ... on ClosedEvent {
+                                                    stateReason
+                                                }
                                             },
                                         },
                                         
@@ -79,7 +82,6 @@ class Repository:
                         },
                     }
                     """
-
         req = requests.post(f"{BASE_URL}graphql",
                             headers={
                                 'Authorization': f'bearer {TOKEN}',
@@ -89,6 +91,7 @@ class Repository:
                             }
                             )
         json = req.json()
+        print(json)
 
         try:
             issues = json['data']['repository']['issues']['edges']
@@ -107,10 +110,8 @@ class Repository:
         issues = []
         json = self.get_issues_json()
 
-        bound = ISSUE_COUNT - ISSUE_COUNT / 5
-
         while len(issues) < aim_count:
-            if look >= ISSUE_COUNT:
+            if look >= ISSUE_COUNT or look >= len(json):
                 if not self.has_next_page:
                     break
 

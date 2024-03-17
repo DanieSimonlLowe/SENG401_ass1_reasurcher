@@ -10,8 +10,8 @@ from Repository import Repository
 # scrapy: bug
 # ---------------------------------
 
-rep = Repository('tensorflow', 'tensorflow', "type:bug")
+rep = Repository('python', 'cpython', "type-bug")
 
 print('repo created')
 
-rep.create_issues_file("text.csv", 500)
+rep.create_issues_file("text.csv", 50)

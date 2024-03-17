@@ -35,7 +35,7 @@ class Issue:
                 if commit['commit'] is None:
                     continue
                 cs.append(commit['commit'])
-        if len(cs) < 2:
+        if len(cs) < 1:
             return None
 
         cs.sort(key=lambda c: time.mktime(datetime.datetime.strptime(c['committedDate'], FORMAT).timetuple()))
@@ -48,6 +48,12 @@ class Issue:
         return self.commit
 
     def is_valid(self):
+
+        for c in self.json_data['timelineItems']['nodes']:
+            if 'commit' in c:
+                continue
+            elif c['stateReason'] != 'COMPLETED':
+                return False
 
         for label in self.json_data['labels']['nodes']:
             if label['name'] in INVALID_LABELS:
