@@ -64,7 +64,23 @@ class Repository:
                                                     commitRepository {
                                                         isFork
                                                         name
-                                                        owner
+                                                        defaultBranchRef {
+                                                            target {
+                                                                ... on Commit {
+                                                                    history(first:50) {
+                                                                        edges {
+                                                                            node {
+                                                                                ... on Commit {
+                                                                                    oid
+                                                                                    committedDate
+                                                                                    url
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
                                                     }
                                                 },
                                                 ... on ClosedEvent {
@@ -125,10 +141,10 @@ class Repository:
             issue = Issue(json, self, look)
             look += 1
             if issue.is_valid():
-                print(issue.json_data)
                 issues.append(issue)
                 print(f'{len(issues)} out of {aim_count} issues found')
-
+                print('Here are all the forks for this issue:\n')
+                print(issue.get_related_forks())
         return issues
 
     def create_issues_file(self, file_name, issue_count):

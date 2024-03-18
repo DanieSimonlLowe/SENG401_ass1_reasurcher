@@ -2,7 +2,6 @@ import time
 import datetime
 
 from Commit import Commit
-from Repository import Repository
 
 FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
@@ -48,21 +47,19 @@ class Issue:
         return self.commit
 
     def get_related_forks(self):
-        timelineItems = self.json_data['timelineItems']['nodes']
+        timeline_items = self.json_data['timelineItems']['nodes']
         forks = []
 
-        for timelineItem in timelineItems:
-            if len(timelineItem) > 0:
-                if 'commitRepository' not in timelineItem:
+        for timeline_item in timeline_items:
+            if len(timeline_item) > 0:
+                if 'commitRepository' not in timeline_item:
                     continue
-                elif timelineItem['commitRepository'] is None:
+                elif timeline_item['commitRepository'] is None:
                     continue
-                elif timelineItem['commitRepository']['isFork'] is False:
+                elif timeline_item['commitRepository']['isFork'] is False:
                     continue
                 else:
-                    name = timelineItem['commitRepository']['name']
-                    owner = timelineItem['commitRepository']['owner']
-                    forks.append(Repository(name, owner))
+                    forks.append(timeline_item['commitRepository'])
         return forks
 
     def is_valid(self):
