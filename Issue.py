@@ -46,22 +46,6 @@ class Issue:
         self.commit = commit
         return self.commit
 
-    def get_related_forks(self):
-        timeline_items = self.json_data['timelineItems']['nodes']
-        forks = []
-
-        for timeline_item in timeline_items:
-            if len(timeline_item) > 0:
-                if 'commitRepository' not in timeline_item:
-                    continue
-                elif timeline_item['commitRepository'] is None:
-                    continue
-                elif timeline_item['commitRepository']['isFork'] is False:
-                    continue
-                else:
-                    forks.append(timeline_item['commitRepository'])
-        return forks
-
     def is_valid(self):
 
         for c in self.json_data['timelineItems']['nodes']:

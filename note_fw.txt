@@ -1,0 +1,2 @@
+Look through the main repository's history and find the merge commit that contains the 
+last commit in the issue's timeline, this commit will contain the changes we are looking for. 

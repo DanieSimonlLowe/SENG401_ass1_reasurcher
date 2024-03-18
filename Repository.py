@@ -61,27 +61,6 @@ class Repository:
                                                         committedDate
                                                         message
                                                     },
-                                                    commitRepository {
-                                                        isFork
-                                                        name
-                                                        defaultBranchRef {
-                                                            target {
-                                                                ... on Commit {
-                                                                    history(first:50) {
-                                                                        edges {
-                                                                            node {
-                                                                                ... on Commit {
-                                                                                    oid
-                                                                                    committedDate
-                                                                                    url
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                    }
                                                 },
                                                 ... on ClosedEvent {
                                                     stateReason
