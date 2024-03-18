@@ -50,6 +50,9 @@ class Commit:
         parent = self.repository.repo.git.rev_parse(f'{self.hash}^')
         self.repository.repo.git.checkout('-f', parent)
 
+    def find_merging_commit(self):
+        pass
+
     def changed(self):
         text = self.repository.repo.git.diff_tree('--no-commit-id', '--name-only', self.hash, '-r')
 
