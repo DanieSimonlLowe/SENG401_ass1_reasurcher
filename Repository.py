@@ -163,6 +163,7 @@ class Repository:
                 commit = Commit(self, oid=oid)
                 print(f'{i} out of {len(lines) - 1}')
                 try:
+                    merge_commit = commit.get_merging_commit()
                     av, m, total = commit.get_changed_cyclomatic_complexity()
 
                     complexity_av.append(av)

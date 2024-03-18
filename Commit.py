@@ -47,8 +47,11 @@ class Commit:
         self.repository.repo.git.checkout('-f', parent)
 
     def get_merging_commit(self):
-        merge = self.repository.repo.git.rev_list(f'{self.hash}..main', '--first-parent')
-        # merge = self.repository.repo.git.rev_list(f'{self.hash}..main', '--ancestry-path')
+        merge_commits_string = self.repository.repo.git.rev_list(f'{self.hash}..main', '--first-parent')
+        merge_commits = merge_commits_string.split('\n')
+        merge_commit = merge_commits[-1]
+        print(self.hash, merge_commit)
+        return merge_commit
 
     def changed(self):
         text = self.repository.repo.git.diff_tree('--no-commit-id', '--name-only', self.hash, '-r')
