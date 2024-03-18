@@ -1,9 +1,5 @@
-import datetime
 import os
-import time
 from radon.visitors import ComplexityVisitor
-
-from constant import FILEPATH, BASE_URL, TOKEN
 
 FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
@@ -50,8 +46,9 @@ class Commit:
         parent = self.repository.repo.git.rev_parse(f'{self.hash}^')
         self.repository.repo.git.checkout('-f', parent)
 
-    def find_merging_commit(self):
-        pass
+    def get_merging_commit(self):
+        merge = self.repository.repo.git.rev_list(f'{self.hash}..main', '--first-parent')
+        # merge = self.repository.repo.git.rev_list(f'{self.hash}..main', '--ancestry-path')
 
     def changed(self):
         text = self.repository.repo.git.diff_tree('--no-commit-id', '--name-only', self.hash, '-r')

@@ -44,6 +44,7 @@ class Issue:
             return None
 
         self.commit = commit
+        self.commit.get_merging_commit()
         return self.commit
 
     def is_valid(self):

@@ -11,7 +11,7 @@ from Repository import Repository
 # ---------------------------------
 
 rep = Repository('python', 'cpython', "type-bug")
-
+rep.set_repo()
 print('repo created')
 
 rep.create_issues_file("text.csv", 50)
