@@ -157,17 +157,26 @@ class Repository:
 
         for issue in issues:
             # Get every commit url from every related fork of the issue 
+            issue_commits = []
+            issue_hashes = []
+
+            issue_commits.append(issue.get_linked_commit().json['url'])
+            issue_hashes.append(issue.get_linked_commits().hash)
+
             forks = issue.get_related_forks()
             for fork in forks:
                 commit_nodes = fork['defaultBranchRef']['target']['history']['edges']
                 for commit_node in commit_nodes:
-                    commits.append(commit_node['node']['url'])
-            times.append(issue.fix_time) # TODO What about commit time minus issue creation time?
-            hashes.append(issue.get_linked_commit().hash)
-            urls.append(issue.json_data['url'])
-            commits.append(issue.get_linked_commit().json['url'])
+                    issue_commits.append(commit_node['node']['url'])
+                    issue_hashes.append(commit_node['node']['oid'])
 
-        print(commits)
+            commit_string = '|'.join(issue_commits)
+            hashes_string = '|'.join(issue_hashes)
+
+            times.append(issue.fix_time) # TODO What about commit time minus issue creation time?
+            hashes.append(hashes_string)
+            urls.append(issue.json_data['url'])
+            commits.append(commit_string)
 
         df = DataFrame({'time': times, 'hashes': hashes, 'url': urls, 'commits': commits})
 
