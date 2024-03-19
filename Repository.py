@@ -143,8 +143,8 @@ class Repository:
             if issue.is_valid():
                 issues.append(issue)
                 print(f'{len(issues)} out of {aim_count} issues found')
-                print('Here are all the forks for this issue:\n')
-                print(issue.get_related_forks())
+                # print('Here are all the forks for this issue:\n')
+                # print(issue.get_related_forks())
         return issues
 
     def create_issues_file(self, file_name, issue_count):
@@ -156,10 +156,18 @@ class Repository:
         commits = []
 
         for issue in issues:
+            # Get every commit url from every related fork of the issue 
+            forks = issue.get_related_forks()
+            for fork in forks:
+                commit_nodes = fork['defaultBranchRef']['target']['history']['edges']
+                for commit_node in commit_nodes:
+                    commits.append(commit_node['node']['url'])
             times.append(issue.fix_time) # TODO What about commit time minus issue creation time?
             hashes.append(issue.get_linked_commit().hash)
             urls.append(issue.json_data['url'])
             commits.append(issue.get_linked_commit().json['url'])
+
+        print(commits)
 
         df = DataFrame({'time': times, 'hashes': hashes, 'url': urls, 'commits': commits})
 
