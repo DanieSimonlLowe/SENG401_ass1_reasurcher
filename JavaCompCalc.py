@@ -33,11 +33,26 @@ def javacyc(code):
     fors += [m.start() for m in re.finditer("\nfor\(", code)]
     complexity += len(fors)
 
+    catchs = [m.start() for m in re.finditer(" catch ", code)]
+    catchs += [m.start() for m in re.finditer(" catch\n", code)]
+    catchs += [m.start() for m in re.finditer("\ncatch ", code)]
+    catchs += [m.start() for m in re.finditer(" catch\(", code)]
+    catchs += [m.start() for m in re.finditer("\ncatch\(", code)]
+    complexity += len(catchs)
+
+    ors = [m.start() for m in re.finditer("\|", code)]
+    notors = [m.start() for m in re.finditer("\|\|", code)]
+    complexity += len(ors) - len(notors)
+
+    ands = [m.start() for m in re.finditer("&", code)]
+    notands = [m.start() for m in re.finditer("&&", code)]
+    complexity += len(ands) - len(notands)
+
     print(complexity)
     return complexity
 
 code = """public static void main(String[] args) {
-    if (20 > 18) {
+    if ((20 > 18)&(20 > 18)&&(20 > 18) {
       System.out.println("20 is greater than 18"); // obviously
     }  
   }
