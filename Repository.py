@@ -7,7 +7,8 @@ import git
 from pandas import DataFrame
 import requests
 
-from Commit import Commit
+from Commit import Commit, get_cyclomatic_complexity
+from Fork import Fork
 from constant import TOKEN, BASE_URL
 from Issue import Issue
 from git import Repo
@@ -23,7 +24,7 @@ class Repository:
         self.name = name
         self.bug_tag = bug_tag
         self.path = None
-
+        self.repo_thread = None
         self.end_cursor = None
         self.has_next_page = True
 
@@ -60,14 +61,6 @@ class Repository:
                                                         url
                                                         committedDate
                                                         message
-                                                    },
-                                                    commitRepository {
-                                                        isFork
-                                                        name
-                                                        owner {
-                                                            id
-                                                        }
-                                                        createdAt
                                                     }
                                                 },
                                                 ... on ClosedEvent {
@@ -140,36 +133,32 @@ class Repository:
         issues = self.get_random_issues(issue_count)
         print('issues:', len(issues))
         times = []
-        hashes = []
         urls = []
         commits = []
         issue_creation = []
-        fork_name = []
-        fork_owner = []
-        fork_created = []
+        fork_url = []
+        issue_close = []
 
         for issue in issues:
-            fork = issue.get_related_forks()
 
-            fork_name.append(fork['name'])
-            fork_owner.append(fork['owner']['id'])
-            fork_created.append(fork['createdAt'])
+            fork_url.append(issue.get_related_fork())
 
             issue_creation = issue.json_data['createdAt']
             times.append(issue.fix_time) # TODO What about commit time minus issue creation time?
-            hashes.append(issue.get_linked_commits().hash)
+            # hashes.append(issue.get_linked_commit().hash)
             urls.append(issue.json_data['url'])
             commits.append(issue.get_linked_commit().json['url'])
+            issue_close.append(issue.get_linked_commit().json['committedDate'])
 
-        df = DataFrame({'issue_creation': issue_creation, 'time': times, 'hashes': hashes, 'url': urls, 'commits': commits, 'fork_name': fork_name, 'fork_created': fork_created, 'fork_owner': fork_owner})
+        df = DataFrame({'issue_creation': issue_creation, 'time': times,  'url': urls, 'commits': commits, 'fork': fork_url, 'issue_close': issue_close})
 
         df.to_csv(file_name, index=False)
+
 
     def create_commit_file(self, file, name):
         repo_thread = threading.Thread(target=Repository.set_repo, args=(self,))
         repo_thread.start()
         times = []
-        hashes = []
         urls = []
         complexity_av = []
         complexity_max = []
@@ -180,34 +169,36 @@ class Repository:
             repo_thread.join()
             for i in range(1, len(lines)):
                 line = lines[i].split(',')
-                time = line[0]
-                oids = line[1].split('|')
+                time = line[1]
                 url = line[2]
-                commits = [Commit(self, oid=oid) for oid in oids]
+                issue_creation = line[0]
+                issue_close = line[4]
+
                 print(f'{i} out of {len(lines) - 1}')
                 try:
-                    total_av, total_m, total_total = 0
-                    for commit in commits:
-                        av, m, total = commit.get_changed_cyclomatic_complexity()
-                        total_av += av
-                        total_m += m
-                        total_total += total
+                    fork = Fork(line[4].strip(), issue_creation, issue_close)
+                    log = self.repo.git.log('-r', '--pretty=format:%h',
+                                                   f'--before="{issue_creation}"')
+                    oid = log.split('\n')[0]
+                    self.repo.git.checkout('-f', oid)
+                    files = fork.get_changed_files()
+                    print(files)
+                    av, max, total = get_cyclomatic_complexity(files)
 
-                    complexity_av.append(total_av)
-                    complexity_max.append(total_m)
-                    complexity_total.append(total_total)
-                except TabError:
-                    pass
-                except SyntaxError:
-                    pass
-                except git.exc.GitCommandError:
-                    pass
+                    complexity_av.append(av)
+                    complexity_max.append(max)
+                    complexity_total.append(total)
+                except TabError as e:
+                    print(e)
+                except SyntaxError as e:
+                    print(e)
+                except git.exc.GitCommandError as e:
+                    print(e)
                 else:
                     times.append(time)
                     urls.append(url)
-                    hashes.append(oid)
 
-        df = DataFrame({'time': times, 'hashes': hashes, 'url': urls,
+        df = DataFrame({'time': times, 'url': urls,
                         'average complexity': complexity_av, 'max complexity': complexity_max,
                         'total complexity': complexity_total})
 

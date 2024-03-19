@@ -46,21 +46,16 @@ class Issue:
         self.commit = commit
         return self.commit
 
-    def get_related_forks(self):
-        timeline_items = self.json_data['timelineItems']['nodes']
-        forks = []
+    def get_related_fork(self):
+        commit = self.get_linked_commit()
+        if commit is None:
+            return None
 
-        for timeline_item in timeline_items:
-            if len(timeline_item) > 0:
-                if 'commitRepository' not in timeline_item:
-                    continue
-                elif timeline_item['commitRepository'] is None:
-                    continue
-                elif timeline_item['commitRepository']['isFork'] is False:
-                    continue
-                else:
-                    forks.append(timeline_item['commmitRepository'])
-        return forks[-1]
+        url = commit.json['url'].split('/')
+        owner = url[3]
+        name = url[4]
+
+        return url[3] + '/' + url[4]
 
     def is_valid(self):
 
@@ -78,3 +73,5 @@ class Issue:
 
     def get_total_cyclomatic_complexity(self):
         return self.commit.get_total_cyclomatic_complexity()
+
+
