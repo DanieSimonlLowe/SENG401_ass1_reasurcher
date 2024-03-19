@@ -1,0 +1,12 @@
+time,hashes,url,average complexity,max complexity,total complexity
+329375396.0,9fc720e5e4f772598013ea48a3f0d22b2b6b04fa,https://github.com/python/cpython/issues/49213,2.515151515151515,13,83
+412091398.0,fce9516a0f81fa4973907f73b6f4718d7a67d99e,https://github.com/python/cpython/issues/51524,2.7065217391304346,22,249
+140204742.0,a0848d169b6982394c539deead0de18f251dfc6d,https://github.com/python/cpython/issues/57645,2.2325581395348837,16,480
+302034379.0,b451e9020df6414e8c51e4e0acd41f855b8742cd,https://github.com/python/cpython/issues/64662,3.375,11,27
+178981361.0,dc0a87d9a0cf18fdfc51865a3c1bd2d5ebe9eae9,https://github.com/python/cpython/issues/73588,1.5627062706270627,16,1894
+183806147.0,080cb27829aa1a461d80504b32c362cbc14a5a75,https://github.com/python/cpython/issues/74033,2.09717868338558,12,669
+213858638.0,eddfdb3e509de7cbb591d89f9313fbb3394a0724,https://github.com/python/cpython/issues/74668,2.6037735849056602,18,414
+202399489.0,735fc2cbbcf875c359021b5b2af7f4c29f4cf66d,https://github.com/python/cpython/issues/75988,2.6646706586826348,52,890
+196356348.0,c75df4b13a1ec6317699142b29380bc500f52dcf,https://github.com/python/cpython/issues/76511,1.5458860759493671,19,977
+157722176.0,46416b9004b687856eaa73e5d48520cd768bbf82,https://github.com/python/cpython/issues/76961,1.9444444444444444,7,35
+132654500.0,226fdce45d217d6e9375d784d1e6aba00c7c491c,https://github.com/python/cpython/issues/77403,2.0375,7,163

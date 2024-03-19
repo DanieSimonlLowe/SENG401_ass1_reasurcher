@@ -49,7 +49,10 @@ class Commit:
     def get_merging_commit(self):
         merge_commits_string = self.repository.repo.git.rev_list(f'{self.hash}..main', '--first-parent')
         merge_commits = merge_commits_string.split('\n')
+
         merge_commit = merge_commits[-1]
+        log = self.repository.repo.git.log(f'{merge_commit}')
+        print(self.hash in log)
         print(self.hash, merge_commit)
         return merge_commit
 
