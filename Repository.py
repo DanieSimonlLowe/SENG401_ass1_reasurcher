@@ -198,16 +198,21 @@ class Repository:
             for i in range(1, len(lines)):
                 line = lines[i].split(',')
                 time = line[0]
-                oid = line[1]
+                oids = line[1].split('|')
                 url = line[2]
-                commit = Commit(self, oid=oid)
+                commits = [Commit(self, oid=oid) for oid in oids]
                 print(f'{i} out of {len(lines) - 1}')
                 try:
-                    av, m, total = commit.get_changed_cyclomatic_complexity()
+                    total_av, total_m, total_total = 0
+                    for commit in commits:
+                        av, m, total = commit.get_changed_cyclomatic_complexity()
+                        total_av += av
+                        total_m += m
+                        total_total += total
 
-                    complexity_av.append(av)
-                    complexity_max.append(m)
-                    complexity_total.append(total)
+                    complexity_av.append(total_av)
+                    complexity_max.append(total_m)
+                    complexity_total.append(total_total)
                 except TabError:
                     pass
                 except SyntaxError:
