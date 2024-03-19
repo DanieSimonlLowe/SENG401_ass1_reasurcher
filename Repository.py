@@ -64,23 +64,8 @@ class Repository:
                                                     commitRepository {
                                                         isFork
                                                         name
-                                                        defaultBranchRef {
-                                                            target {
-                                                                ... on Commit {
-                                                                    history(first:50) {
-                                                                        edges {
-                                                                            node {
-                                                                                ... on Commit {
-                                                                                    oid
-                                                                                    committedDate
-                                                                                    url
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
+                                                        owner
+                                                        createdAt
                                                     }
                                                 },
                                                 ... on ClosedEvent {
@@ -123,6 +108,7 @@ class Repository:
             return issues
         except KeyError as e:
             print('slept')
+            print(json)
             sleep(30)
             return self.get_issues_json()
 

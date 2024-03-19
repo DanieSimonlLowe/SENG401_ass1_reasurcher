@@ -2,6 +2,7 @@ import time
 import datetime
 
 from Commit import Commit
+from Repository import Repository
 
 FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
@@ -59,7 +60,8 @@ class Issue:
                 elif timeline_item['commitRepository']['isFork'] is False:
                     continue
                 else:
-                    forks.append(timeline_item['commitRepository'])
+                    fork = Fork()
+                    forks.append(fork)
         return forks
 
     def is_valid(self):
