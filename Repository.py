@@ -64,7 +64,9 @@ class Repository:
                                                     commitRepository {
                                                         isFork
                                                         name
-                                                        owner
+                                                        owner {
+                                                            id
+                                                        }
                                                         createdAt
                                                     }
                                                 },
@@ -98,6 +100,7 @@ class Repository:
                             }
                             )
         json = req.json()
+        print(json)
 
         try:
             issues = json['data']['repository']['issues']['edges']
@@ -108,7 +111,7 @@ class Repository:
             return issues
         except KeyError as e:
             print('slept')
-            print(json)
+            # print(json)
             sleep(30)
             return self.get_issues_json()
 
@@ -140,31 +143,25 @@ class Repository:
         hashes = []
         urls = []
         commits = []
+        issue_creation = []
+        fork_name = []
+        fork_owner = []
+        fork_created = []
 
         for issue in issues:
-            # Get every commit url from every related fork of the issue 
-            issue_commits = []
-            issue_hashes = []
+            fork = issue.get_related_forks()
 
-            issue_commits.append(issue.get_linked_commit().json['url'])
-            issue_hashes.append(issue.get_linked_commits().hash)
+            fork_name.append(fork['name'])
+            fork_owner.append(fork['owner']['id'])
+            fork_created.append(fork['createdAt'])
 
-            forks = issue.get_related_forks()
-            for fork in forks:
-                commit_nodes = fork['defaultBranchRef']['target']['history']['edges']
-                for commit_node in commit_nodes:
-                    issue_commits.append(commit_node['node']['url'])
-                    issue_hashes.append(commit_node['node']['oid'])
-
-            commit_string = '|'.join(issue_commits)
-            hashes_string = '|'.join(issue_hashes)
-
+            issue_creation = issue.json_data['createdAt']
             times.append(issue.fix_time) # TODO What about commit time minus issue creation time?
-            hashes.append(hashes_string)
+            hashes.append(issue.get_linked_commits().hash)
             urls.append(issue.json_data['url'])
-            commits.append(commit_string)
+            commits.append(issue.get_linked_commit().json['url'])
 
-        df = DataFrame({'time': times, 'hashes': hashes, 'url': urls, 'commits': commits})
+        df = DataFrame({'issue_creation': issue_creation, 'time': times, 'hashes': hashes, 'url': urls, 'commits': commits, 'fork_name': fork_name, 'fork_created': fork_created, 'fork_owner': fork_owner})
 
         df.to_csv(file_name, index=False)
 
