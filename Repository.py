@@ -27,7 +27,6 @@ class Repository:
         self.repo_thread = None
         self.end_cursor = None
         self.has_next_page = True
-        self.timeout = 0
 
         self.thread_called = False
 
@@ -44,7 +43,7 @@ class Repository:
     def __str__(self):
         return f'{self.owner}/{self.name}'
 
-    def get_issues_json(self):
+    def get_issues_json(self, timeout=0):
         after = ""
         if self.end_cursor is not None:
             after = f", after: \"{self.end_cursor}\""
@@ -113,7 +112,6 @@ class Repository:
                             }
                             )
         json = req.json()
-        print(json)
 
         try:
             issues = json['data']['repository']['issues']['edges']
@@ -123,13 +121,11 @@ class Repository:
             print('new json generated')
             return issues
         except KeyError as e:
-            if self.timeout > 10:
+            if timeout > 15:
                 self.has_next_page = False
             print('slept')
-            self.timeout += 1
-            # print(json)
-            sleep(30)
-            return self.get_issues_json()
+            sleep(120)
+            return self.get_issues_json(timeout+1)
 
     def get_random_issues(self, aim_count):
         look = 0

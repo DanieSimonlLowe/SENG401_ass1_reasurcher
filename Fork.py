@@ -31,7 +31,7 @@ class Fork:
         self.state = json['source']['state']
         # self.files_thread = threading.Thread(target=Fork.set_files, args=(self,))
 
-    def set_file(self, oid, out):
+    def set_file(self, oid, out, count=0):
         text = f"{BASE_URL}repos/{self.owner}/{self.repo}/commits/{oid}"
         req = requests.get(text,
                             headers={
@@ -39,6 +39,14 @@ class Fork:
                             },
                             )
         json = req.json()
+        if 'files' not in json:
+            print(json)
+            if count > 15:
+                raise TimeoutError(f'Timed out waiting for {text}')
+            print('slept')
+            time.sleep(120)
+            return self.set_file(oid, out, count+1)
+
         for file in json['files']:
             filename = file['filename']
             extension = filename.split('.')[-1]
