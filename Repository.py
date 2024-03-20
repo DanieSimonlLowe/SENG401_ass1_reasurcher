@@ -69,6 +69,8 @@ class Repository:
                                                     url
                                                     source {
                                                         ... on PullRequest {
+                                                            url
+                                                            state
                                                             repository {
                                                                 url
                                                             }
@@ -76,7 +78,7 @@ class Repository:
                                                                 edges {
                                                                     node {
                                                                         commit {
-                                                                            abbreviatedOid
+                                                                            oid
                                                                         }
                                                                     }
                                                                 }
@@ -155,6 +157,7 @@ class Repository:
 
         times = []
         urls = []
+        urls2 = []
         complexity_av = []
         complexity_max = []
         complexity_total = []
@@ -169,6 +172,7 @@ class Repository:
                 complexity_total.append(total)
                 times.append(issue.fix_time)
                 urls.append(issue.get_related_fork().url)
+                urls2.append(issue.get_related_fork().url2)
 
                 # issue.get_related_fork().delete()
                 print(f'{len(urls)} out of {len(issues)} issues found')
@@ -179,7 +183,7 @@ class Repository:
             except git.exc.GitCommandError as e:
                 print(e)
 
-        df = DataFrame({'time': times, 'url': urls,
+        df = DataFrame({'time': times, 'url': urls, 'url2': urls2,
                         'average complexity': complexity_av, 'max complexity': complexity_max,
                         'total complexity': complexity_total})
 

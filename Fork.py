@@ -3,71 +3,71 @@ import threading
 from datetime import datetime
 import time
 
+import requests
 from git import Repo
 from Commit import Commit, get_cyclomatic_complexity
-from constant import FILEPATH
+from constant import FILEPATH, TOKEN, BASE_URL
 
 FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
+PYTHON_FILE_EXTENSIONS = {
+    'py', 'pyc', 'pyo', 'pycpp', 'pyi', 'pyd', 'pyw', 'pyz'
+}
 
 class Fork:
     def __init__(self, json, repository, issue):
         # add fork validilty check
         self.url = json['url']
-        self.commits_json = json['source']['commits']['edges']
+        self.url2 = json['source']['url']
         self.repository = repository
         self.issue = issue
-        self.commits = None
+        self.commits_json = json['source']['commits']['edges']
 
         temp = json['source']['repository']['url'].split('/')
-        self.name = f'{temp[3]}/{temp[4]}'
-        self.path = os.path.join(FILEPATH, f'fork_{temp[3]}_{temp[4]}')
+        self.owner = temp[3]
+        self.repo = temp[4]
 
-        self.repo = None
-        self.thread_called = False
-        self.repo_thread = threading.Thread(target=Fork.set_repo, args=(self,))
+        self.files = None
+        self.state = json['source']['state']
+        # self.files_thread = threading.Thread(target=Fork.set_files, args=(self,))
 
-    def set_repo(self):
-        if self.name == str(self.repository):
-            self.repo = self.repository.repo
-
-        if self.thread_called:
-            return
-        self.thread_called = True
-        if os.path.exists(self.path):
-            self.repo = Repo(path=self.path)
-        else:
-            self.repo = Repo.clone_from(f'https://github.com/{self.name}', self.path)
-
-    def get_commits(self):
-        if self.commits is not None:
-            return self.commits
-
-        self.commits = []
-        for node in self.commits_json:
-            if 'commit' in node['node'] and 'abbreviatedOid' in node['node']['commit']:
-                commit = Commit(self, oid=node['node']['commit']['abbreviatedOid'])
-                self.commits.append(commit)
-        return self.commits
+    def set_file(self, oid, out):
+        text = f"{BASE_URL}repos/{self.owner}/{self.repo}/commits/{oid}"
+        req = requests.get(text,
+                            headers={
+                                'Authorization': f'bearer {TOKEN}',
+                            },
+                            )
+        json = req.json()
+        for file in json['files']:
+            filename = file['filename']
+            extension = filename.split('.')[-1]
+            if extension in PYTHON_FILE_EXTENSIONS:
+                path = os.path.join(self.repository.path,filename)
+                if os.path.exists(path):
+                    out.add(path)
 
     def get_changed_files(self):
-        commits = self.get_commits()
-        files = set()
-        for commit in commits:
-            files.update(commit.changed())
-        return list(files)
+        threads = []
+        out = set()
+        for node in self.commits_json:
+            oid = node['node']['commit']['oid']
+            thread = threading.Thread(target=Fork.set_file, args=(self, oid, out))
+            thread.start()
+            threads.append(thread)
+        for thread in threads:
+            thread.join()
+        return out
 
     def calculate_complexity(self):
-        self.repo_thread.start()
         log = self.repository.repo.git.log('-r', '--pretty=format:%h',
                                            f'--before="{self.issue.created_date}"')
         oid = log.split('\n')[0]
         self.repository.repo.git.checkout('-f', oid)
-        self.repo_thread.join()
 
         files = self.get_changed_files()
+        print(files)
         return get_cyclomatic_complexity(files)
 
-    def delete(self):
-        if os.path.isfile(self.path):
-            os.remove(self.path)
+    def is_valid(self):
+        return self.state == 'MERGED'
