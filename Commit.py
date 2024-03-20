@@ -31,7 +31,7 @@ def get_cyclomatic_complexity(files):
             pass
 
     if count == 0:
-        return 0
+        return 0, 0, complexity
 
     return complexity / count, max, complexity
 
@@ -85,7 +85,9 @@ class Commit:
         return get_cyclomatic_complexity(self.changed())
 
     def is_valid(self):
-        commit_message = self.json['message'].lower()
+
         # print(commit_message)
-        # print(self.json['url'])
+        if str(self.repository) in self.json['url']:
+            return False
+        commit_message = self.json['message'].lower()
         return any(keyword in commit_message for keyword in ["fix"])  # TODO make sure commit is in correct repository

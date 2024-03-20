@@ -148,7 +148,7 @@ class Repository:
             # hashes.append(issue.get_linked_commit().hash)
             urls.append(issue.json_data['url'])
             commits.append(issue.get_linked_commit().json['url'])
-            issue_close.append(issue.get_linked_commit().json['committedDate'])
+            issue_close.append(issue.closed_date)
 
         df = DataFrame({'issue_creation': issue_creation, 'time': times,  'url': urls, 'commits': commits, 'fork': fork_url, 'issue_close': issue_close})
 
@@ -172,8 +172,7 @@ class Repository:
                 time = line[1]
                 url = line[2]
                 issue_creation = line[0]
-                issue_close = line[4]
-
+                issue_close = line[5].strip()
                 print(f'{i} out of {len(lines) - 1}')
                 try:
                     fork = Fork(line[4].strip(), issue_creation, issue_close)
@@ -184,6 +183,8 @@ class Repository:
                     files = fork.get_changed_files()
                     print(files)
                     av, max, total = get_cyclomatic_complexity(files)
+                    if 0 == max:
+                        continue
 
                     complexity_av.append(av)
                     complexity_max.append(max)

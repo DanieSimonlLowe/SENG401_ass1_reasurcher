@@ -14,6 +14,6 @@ rep = Repository('python', 'cpython', "type-bug")
 
 print('repo created')
 
-#rep.create_issues_file("text.csv", 1)
+rep.create_issues_file("text.csv", 5)
 
 rep.create_commit_file("text.csv", 'out.csv')
