@@ -155,17 +155,19 @@ class Repository:
         complexity_av = []
         complexity_max = []
         complexity_total = []
+        complexity_over = []
         print('waiting for tread clone')
         repo_thread.join()
         print('starting analysis')
         for issue in issues:
             try:
-                av, m, total = issue.get_related_fork().calculate_complexity()
+                av, m, total, over = issue.get_related_fork().calculate_complexity()
                 if av == 0:
                     continue
                 complexity_av.append(av)
                 complexity_max.append(m)
                 complexity_total.append(total)
+                complexity_over.append(over)
                 times.append(issue.fix_time)
                 urls.append(issue.get_related_fork().url)
                 urls2.append(issue.get_related_fork().url2)
@@ -178,7 +180,7 @@ class Repository:
                 print(e)
             except git.exc.GitCommandError as e:
                 print(e)
-        return times, urls, urls2, complexity_av, complexity_max, complexity_total
+        return times, urls, urls2, complexity_av, complexity_max, complexity_total, complexity_over
 
     def create_commit_file(self, aim_count, name):
         repo_thread = threading.Thread(target=Repository.set_repo, args=(self,))
@@ -189,12 +191,13 @@ class Repository:
         complexity_av = []
         complexity_max = []
         complexity_total = []
+        complexity_over = []
 
         try_count = 1
         while len(times) < aim_count and try_count < 10:
             print(f'retrival try {try_count}')
             try_count += 1
-            o_times, o_urls, o_urls2, o_complexity_av, o_complexity_max, o_complexity_total = (
+            o_times, o_urls, o_urls2, o_complexity_av, o_complexity_max, o_complexity_total, o_complexity_over = (
                 self.create_commit_file_helper(aim_count - len(times), repo_thread))
             times += o_times
             urls += o_urls
@@ -202,9 +205,10 @@ class Repository:
             complexity_av += o_complexity_av
             complexity_max += o_complexity_max
             complexity_total += o_complexity_total
+            complexity_over += o_complexity_over
 
         df = DataFrame({'time': times, 'url': urls, 'url2': urls2,
                         'average complexity': complexity_av, 'max complexity': complexity_max,
-                        'total complexity': complexity_total})
+                        'total complexity': complexity_total, 'complexity over lines of code': complexity_over})
 
         df.to_csv(name, index=False)

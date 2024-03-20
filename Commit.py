@@ -17,10 +17,12 @@ def get_cyclomatic_complexity(files):
     complexity = 0
     count = 0
     max = 0
+    lines = 0
     for file in files:
         try:
             with open(file, 'r') as f:
                 text = f.read()
+                lines += text.count('\n')
                 vistor = ComplexityVisitor.from_code(text, no_assert=True)
                 for function in vistor.blocks:
                     complexity += function.complexity
@@ -32,9 +34,9 @@ def get_cyclomatic_complexity(files):
             pass
 
     if count == 0:
-        return 0, 0, complexity
+        return 0, 0, 0, 0
 
-    return complexity / count, max, complexity
+    return complexity / count, max, complexity, complexity / lines
 
 
 class Commit:
