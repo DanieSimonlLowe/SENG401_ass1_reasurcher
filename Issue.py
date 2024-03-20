@@ -30,9 +30,7 @@ class Issue:
             if 'id' in node and 'source' in node and 'commits' in node['source']:
                 self.fork = Fork(node, self.repository, self)
 
-                if self.fork.is_valid():
-                    # add fork stuff
-                    return self.fork
+                return self.fork
 
 
 

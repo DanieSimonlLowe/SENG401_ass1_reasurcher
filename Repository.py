@@ -9,7 +9,7 @@ import requests
 
 from Commit import Commit, get_cyclomatic_complexity
 from Fork import Fork
-from constant import TOKEN, BASE_URL
+from constant import TOKEN, BASE_URL, FILEPATH
 from Issue import Issue
 from git import Repo
 
@@ -29,8 +29,13 @@ class Repository:
         self.has_next_page = True
         self.timeout = 0
 
+        self.thread_called = False
+
     def set_repo(self):
-        self.path = os.path.join('holder', f'{self.owner}_{self.name}')
+        if self.thread_called:
+            return
+        self.thread_called = True
+        self.path = os.path.join(FILEPATH, f'{self.owner}_{self.name}')
         if os.path.exists(self.path):
             self.repo = Repo(path=self.path)
         else:
@@ -46,7 +51,7 @@ class Repository:
 
         query = """query {
                         repository(owner: \"""" + self.owner + """\", name: \"""" + self.name + """\") {
-                            issues(states: [CLOSED], labels: \"""" + self.bug_tag + """\", first: """ + str(
+                            issues(states: [CLOSED], first: """ + str(
             ISSUE_COUNT) + after + """) {
                                 edges {
                                     node {
@@ -153,7 +158,7 @@ class Repository:
         complexity_av = []
         complexity_max = []
         complexity_total = []
-
+        print('waiting for tread clone')
         repo_thread.join()
         print('starting analysis')
         for issue in issues:
@@ -165,7 +170,7 @@ class Repository:
                 times.append(issue.fix_time)
                 urls.append(issue.get_related_fork().url)
 
-                issue.get_related_fork().delete()
+                # issue.get_related_fork().delete()
                 print(f'{len(urls)} out of {len(issues)} issues found')
             except TabError as e:
                 print(e)
@@ -173,7 +178,6 @@ class Repository:
                 print(e)
             except git.exc.GitCommandError as e:
                 print(e)
-
 
         df = DataFrame({'time': times, 'url': urls,
                         'average complexity': complexity_av, 'max complexity': complexity_max,

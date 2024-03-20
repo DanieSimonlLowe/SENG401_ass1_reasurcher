@@ -5,6 +5,7 @@ import time
 
 from git import Repo
 from Commit import Commit, get_cyclomatic_complexity
+from constant import FILEPATH
 
 FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
@@ -20,14 +21,19 @@ class Fork:
 
         temp = json['source']['repository']['url'].split('/')
         self.name = f'{temp[3]}/{temp[4]}'
-        self.path = os.path.join('holder', f'fork_{temp[3]}_{temp[4]}')
+        self.path = os.path.join(FILEPATH, f'fork_{temp[3]}_{temp[4]}')
 
         self.repo = None
+        self.thread_called = False
         self.repo_thread = threading.Thread(target=Fork.set_repo, args=(self,))
-        self.repo_thread.start()
-
 
     def set_repo(self):
+        if self.name == str(self.repository):
+            self.repo = self.repository.repo
+
+        if self.thread_called:
+            return
+        self.thread_called = True
         if os.path.exists(self.path):
             self.repo = Repo(path=self.path)
         else:
@@ -52,6 +58,7 @@ class Fork:
         return list(files)
 
     def calculate_complexity(self):
+        self.repo_thread.start()
         log = self.repository.repo.git.log('-r', '--pretty=format:%h',
                                            f'--before="{self.issue.created_date}"')
         oid = log.split('\n')[0]
@@ -60,9 +67,6 @@ class Fork:
 
         files = self.get_changed_files()
         return get_cyclomatic_complexity(files)
-
-    def is_valid(self):
-        return not str(self.repository) in self.name
 
     def delete(self):
         if os.path.isfile(self.path):
