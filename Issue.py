@@ -29,8 +29,12 @@ class Issue:
         for node in self.json_data['timelineItems']['nodes']:
             if 'id' in node and 'source' in node and 'commits' in node['source']:
                 self.fork = Fork(node, self.repository, self)
-                # add fork stuff
-                return self.fork
+
+                if self.fork.is_valid():
+                    # add fork stuff
+                    return self.fork
+
+
 
         self.fork = None
         return None

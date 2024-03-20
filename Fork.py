@@ -11,7 +11,7 @@ FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 class Fork:
     def __init__(self, json, repository, issue):
-        #add fork validilty check
+        # add fork validilty check
         self.url = json['url']
         self.commits_json = json['source']['commits']['edges']
         self.repository = repository
@@ -25,6 +25,7 @@ class Fork:
         self.repo = None
         self.repo_thread = threading.Thread(target=Fork.set_repo, args=(self,))
         self.repo_thread.start()
+
 
     def set_repo(self):
         if os.path.exists(self.path):
@@ -59,3 +60,6 @@ class Fork:
 
         files = self.get_changed_files()
         return get_cyclomatic_complexity(files)
+
+    def is_valid(self):
+        return not str(self.repository) in self.name

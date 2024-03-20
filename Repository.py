@@ -27,6 +27,7 @@ class Repository:
         self.repo_thread = None
         self.end_cursor = None
         self.has_next_page = True
+        self.timeout = 0
 
     def set_repo(self):
         self.path = os.path.join('holder', f'{self.owner}_{self.name}')
@@ -115,7 +116,10 @@ class Repository:
             print('new json generated')
             return issues
         except KeyError as e:
+            if self.timeout > 10:
+                self.has_next_page = False
             print('slept')
+            self.timeout += 1
             # print(json)
             sleep(30)
             return self.get_issues_json()
