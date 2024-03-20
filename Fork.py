@@ -63,3 +63,7 @@ class Fork:
 
     def is_valid(self):
         return not str(self.repository) in self.name
+
+    def delete(self):
+        if os.path.isfile(self.path):
+            os.remove(self.path)

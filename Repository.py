@@ -164,6 +164,8 @@ class Repository:
                 complexity_total.append(total)
                 times.append(issue.fix_time)
                 urls.append(issue.get_related_fork().url)
+
+                issue.get_related_fork().delete()
                 print(f'{len(urls)} out of {len(issues)} issues found')
             except TabError as e:
                 print(e)
@@ -171,6 +173,7 @@ class Repository:
                 print(e)
             except git.exc.GitCommandError as e:
                 print(e)
+
 
         df = DataFrame({'time': times, 'url': urls,
                         'average complexity': complexity_av, 'max complexity': complexity_max,
