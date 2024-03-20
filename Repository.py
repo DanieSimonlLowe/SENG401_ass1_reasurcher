@@ -150,11 +150,9 @@ class Repository:
                 print(f'{len(issues)} out of {aim_count} issues found')
         return issues
 
-    def create_commit_file(self, aim_count, name):
-        repo_thread = threading.Thread(target=Repository.set_repo, args=(self,))
-        repo_thread.start()
-        issues = self.get_random_issues(aim_count)
+    def create_commit_file_helper(self, aim_count, repo_thread):
 
+        issues = self.get_random_issues(aim_count)
         times = []
         urls = []
         urls2 = []
@@ -167,6 +165,8 @@ class Repository:
         for issue in issues:
             try:
                 av, m, total = issue.get_related_fork().calculate_complexity()
+                if av == 0:
+                    continue
                 complexity_av.append(av)
                 complexity_max.append(m)
                 complexity_total.append(total)
@@ -175,13 +175,37 @@ class Repository:
                 urls2.append(issue.get_related_fork().url2)
 
                 # issue.get_related_fork().delete()
-                print(f'{len(urls)} out of {len(issues)} issues found')
+                print(f'{len(urls)} out of {len(issues)} issues analyzed')
             except TabError as e:
                 print(e)
             except SyntaxError as e:
                 print(e)
             except git.exc.GitCommandError as e:
                 print(e)
+        return times, urls, urls2, complexity_av, complexity_max, complexity_total
+
+    def create_commit_file(self, aim_count, name):
+        repo_thread = threading.Thread(target=Repository.set_repo, args=(self,))
+        repo_thread.start()
+        times = []
+        urls = []
+        urls2 = []
+        complexity_av = []
+        complexity_max = []
+        complexity_total = []
+
+        try_count = 1
+        while len(times) < aim_count and try_count < 10:
+            print(f'retrival try {try_count}')
+            try_count += 1
+            o_times, o_urls, o_urls2, o_complexity_av, o_complexity_max, o_complexity_total = (
+                self.create_commit_file_helper(aim_count - len(times), repo_thread))
+            times += o_times
+            urls += o_urls
+            urls2 += o_urls2
+            complexity_av += o_complexity_av
+            complexity_max += o_complexity_max
+            complexity_total += o_complexity_total
 
         df = DataFrame({'time': times, 'url': urls, 'url2': urls2,
                         'average complexity': complexity_av, 'max complexity': complexity_max,
