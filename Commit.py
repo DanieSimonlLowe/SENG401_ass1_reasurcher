@@ -1,9 +1,9 @@
-import datetime
 import os
-import time
+
+import requests
 from radon.visitors import ComplexityVisitor
 
-from constant import FILEPATH, BASE_URL, TOKEN
+from constant import TOKEN
 
 FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
@@ -45,6 +45,7 @@ class Commit:
             self.hash = self.json["oid"]
         if oid is not None:
             self.hash = oid
+        self.url = self.json.get('url')
 
     def checkout(self):
         parent = self.repository.repo.git.rev_parse(f'{self.hash}^')
@@ -85,9 +86,47 @@ class Commit:
         return get_cyclomatic_complexity(self.changed())
 
     def is_valid(self):
-
         # print(commit_message)
         if str(self.repository) in self.json['url']:
             return False
         commit_message = self.json['message'].lower()
         return any(keyword in commit_message for keyword in ["fix"])  # TODO make sure commit is in correct repository
+
+    def get_diff_text(self):
+        headers = {
+            'Authorization': f'token {TOKEN}',
+            'Accept': 'application/vnd.github.v3.diff'
+        }
+        diff_url = self.url + ".diff"
+        response = requests.get(diff_url, headers=headers)
+        if response.status_code == 200:
+            return response.text
+        else:
+            error_message = response.json().get('message', 'No error message available')
+            print(f"Error fetching commit diff: {response.status_code}, Message: {error_message}")
+            return None
+
+    def parse_diff(self, diff_text):
+        files_and_functions = {}
+        current_file = None
+        for line in diff_text.split('\n'):
+            # Check if the line indicates a file change
+            if line.startswith('diff --git'):
+                # Extract the file name from the diff --git line
+                parts = line.split(' ')
+                if len(parts) >= 3:
+                    current_file = parts[2][2:]  # Remove the 'b/' prefix
+                    if current_file not in files_and_functions:
+                        files_and_functions[current_file] = set()
+            # Check if the line indicates a function change in the hunk header
+            elif line.startswith('@@') and 'def ' in line:
+                # Extract the function name
+                function_name = line[line.index('def '):].split('(')[0].replace('def ', '').strip()
+                if current_file:
+                    files_and_functions[current_file].add(function_name)
+
+        # Convert sets to lists for easier use later
+        for file in files_and_functions:
+            files_and_functions[file] = list(files_and_functions[file])
+
+        return files_and_functions
