@@ -4,15 +4,24 @@ from datetime import datetime
 import time
 
 from git import Repo
-from Commit import Commit
+from Commit import Commit, get_cyclomatic_complexity
 
 FORMAT = "%Y-%m-%dT%H:%M:%SZ"
+
+
 class Fork:
-    def __init__(self, name, issue_creation, issue_close):
-        self.issue_creation = issue_creation
-        self.issue_close = int(float(issue_close)) + 1
-        self.name = name
-        self.path = os.path.join('holder', f'fork_{name.replace("/", "_").strip()}')
+    def __init__(self, json, repository, issue):
+        #add fork validilty check
+        self.url = json['url']
+        self.commits_json = json['source']['commits']['edges']
+        self.repository = repository
+        self.issue = issue
+        self.commits = None
+
+        temp = json['source']['repository']['url'].split('/')
+        self.name = f'{temp[3]}/{temp[4]}'
+        self.path = os.path.join('holder', f'fork_{temp[3]}_{temp[4]}')
+
         self.repo = None
         self.repo_thread = threading.Thread(target=Fork.set_repo, args=(self,))
         self.repo_thread.start()
@@ -24,20 +33,15 @@ class Fork:
             self.repo = Repo.clone_from(f'https://github.com/{self.name}', self.path)
 
     def get_commits(self):
-        first = self.name.split('/')[0]
+        if self.commits is not None:
+            return self.commits
 
-        self.repo_thread.join()
-        log = self.repo.git.log('--pretty=format:%h', f'--since={self.issue_creation}', f'--before={self.issue_close}',
-                                                                                        f'--author={first}')
-        hashes = log.split('\n')
-        print(hashes)
-        commits = []
-        for hash_id in hashes:
-            if len(hash_id) < 1:
-                continue
-            commit = Commit(self, oid=hash_id)
-            commits.append(commit)
-        return commits
+        self.commits = []
+        for node in self.commits_json:
+            if 'commit' in node['node'] and 'abbreviatedOid' in node['node']['commit']:
+                commit = Commit(self, oid=node['node']['commit']['abbreviatedOid'])
+                self.commits.append(commit)
+        return self.commits
 
     def get_changed_files(self):
         commits = self.get_commits()
@@ -45,3 +49,13 @@ class Fork:
         for commit in commits:
             files.update(commit.changed())
         return list(files)
+
+    def calculate_complexity(self):
+        log = self.repository.repo.git.log('-r', '--pretty=format:%h',
+                                           f'--before="{self.issue.created_date}"')
+        oid = log.split('\n')[0]
+        self.repository.repo.git.checkout('-f', oid)
+        self.repo_thread.join()
+
+        files = self.get_changed_files()
+        return get_cyclomatic_complexity(files)

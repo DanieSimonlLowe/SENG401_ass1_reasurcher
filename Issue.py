@@ -2,6 +2,7 @@ import time
 import datetime
 
 from Commit import Commit
+from Fork import Fork
 
 FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
@@ -15,63 +16,36 @@ class Issue:
     def __init__(self, json, repository, index):
         self.json_data = json[index]['node']
         self.repository = repository
-        self.commit = None
         self.created_date = time.mktime(datetime.datetime.strptime(self.json_data['createdAt'], FORMAT).timetuple())
         self.closed_date = time.mktime(datetime.datetime.strptime(self.json_data['closedAt'], FORMAT).timetuple())
         self.fix_time = self.closed_date - self.created_date
 
-    def get_linked_commit(self):
-        if self.commit is not None:
-            return self.commit
-
-        commits = self.json_data['timelineItems']['nodes']
-
-        cs = []
-        for commit in commits:
-            if len(commit) > 0:
-                if 'commit' not in commit:
-                    continue
-                elif commit['commit'] is None:
-                    continue
-                cs.append(commit['commit'])
-        if len(cs) < 1:
-            return None
-
-        cs.sort(key=lambda c: time.mktime(datetime.datetime.strptime(c['committedDate'], FORMAT).timetuple()))
-        commit = Commit(self.repository, json=cs[-1])
-
-        if not commit.is_valid():
-            return None
-
-        self.commit = commit
-        return self.commit
+        self.fork = 0
 
     def get_related_fork(self):
-        commit = self.get_linked_commit()
-        if commit is None:
-            return None
+        if self.fork != 0:
+            return self.fork
 
-        url = commit.json['url'].split('/')
-        owner = url[3]
-        name = url[4]
+        for node in self.json_data['timelineItems']['nodes']:
+            if 'id' in node and 'source' in node and 'commits' in node['source']:
+                self.fork = Fork(node, self.repository, self)
+                # add fork stuff
+                return self.fork
 
-        return url[3] + '/' + url[4]
+        self.fork = None
+        return None
 
     def is_valid(self):
 
         for c in self.json_data['timelineItems']['nodes']:
-            if 'commit' in c:
-                continue
-            elif c['stateReason'] != 'COMPLETED':
+            if 'stateReason' in c and c['stateReason'] != 'COMPLETED':
                 return False
 
         for label in self.json_data['labels']['nodes']:
             if label['name'] in INVALID_LABELS:
                 return False
 
-        return self.get_linked_commit() is not None
+        return self.get_related_fork() is not None
 
     def get_total_cyclomatic_complexity(self):
         return self.commit.get_total_cyclomatic_complexity()
-
-

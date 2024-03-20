@@ -52,7 +52,6 @@ class Commit:
 
     def changed(self):
         text = self.repository.repo.git.diff_tree('--no-commit-id', '--name-only', self.hash, '-r')
-
         out = []
         for file in text.split('\n'):
             extension = file.split('.')[-1]
@@ -89,5 +88,4 @@ class Commit:
         # print(commit_message)
         if str(self.repository) in self.json['url']:
             return False
-        commit_message = self.json['message'].lower()
-        return any(keyword in commit_message for keyword in ["fix"])  # TODO make sure commit is in correct repository
+        return True

@@ -53,18 +53,30 @@ class Repository:
                                         createdAt
                                         closedAt
                                         url
-                                        timelineItems(first: 50, itemTypes: [REFERENCED_EVENT, CLOSED_EVENT]) {
+                                        timelineItems(last: 5, itemTypes: [CLOSED_EVENT, CROSS_REFERENCED_EVENT]) {
                                             nodes {
-                                                ... on ReferencedEvent {
-                                                    commit {
-                                                        oid
-                                                        url
-                                                        committedDate
-                                                        message
-                                                    }
-                                                },
                                                 ... on ClosedEvent {
                                                     stateReason
+                                                }
+                                                ... on CrossReferencedEvent {
+                                                    id
+                                                    url
+                                                    source {
+                                                        ... on PullRequest {
+                                                            repository {
+                                                                url
+                                                            }
+                                                            commits(first: 20) {
+                                                                edges {
+                                                                    node {
+                                                                        commit {
+                                                                            abbreviatedOid
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
                                                 }
                                             },
                                         },
@@ -114,7 +126,7 @@ class Repository:
         json = self.get_issues_json()
 
         while len(issues) < aim_count:
-            if look >= ISSUE_COUNT or look >= len(json):
+            if look >= len(json):
                 if not self.has_next_page:
                     break
 
@@ -125,79 +137,36 @@ class Repository:
             if issue.is_valid():
                 issues.append(issue)
                 print(f'{len(issues)} out of {aim_count} issues found')
-                # print('Here are all the forks for this issue:\n')
-                # print(issue.get_related_forks())
         return issues
 
-    def create_issues_file(self, file_name, issue_count):
-        issues = self.get_random_issues(issue_count)
-        print('issues:', len(issues))
-        times = []
-        urls = []
-        commits = []
-        issue_creation = []
-        fork_url = []
-        issue_close = []
-
-        for issue in issues:
-
-            fork_url.append(issue.get_related_fork())
-
-            issue_creation = issue.json_data['createdAt']
-            times.append(issue.fix_time) # TODO What about commit time minus issue creation time?
-            # hashes.append(issue.get_linked_commit().hash)
-            urls.append(issue.json_data['url'])
-            commits.append(issue.get_linked_commit().json['url'])
-            issue_close.append(issue.closed_date)
-
-        df = DataFrame({'issue_creation': issue_creation, 'time': times,  'url': urls, 'commits': commits, 'fork': fork_url, 'issue_close': issue_close})
-
-        df.to_csv(file_name, index=False)
-
-
-    def create_commit_file(self, file, name):
+    def create_commit_file(self, aim_count, name):
         repo_thread = threading.Thread(target=Repository.set_repo, args=(self,))
         repo_thread.start()
+        issues = self.get_random_issues(aim_count)
+
         times = []
         urls = []
         complexity_av = []
         complexity_max = []
         complexity_total = []
-        with open(file, 'r') as f:
-            lines = f.readlines()
-            print('loading repository data')
-            repo_thread.join()
-            for i in range(1, len(lines)):
-                line = lines[i].split(',')
-                time = line[1]
-                url = line[2]
-                issue_creation = line[0]
-                issue_close = line[5].strip()
-                print(f'{i} out of {len(lines) - 1}')
-                try:
-                    fork = Fork(line[4].strip(), issue_creation, issue_close)
-                    log = self.repo.git.log('-r', '--pretty=format:%h',
-                                                   f'--before="{issue_creation}"')
-                    oid = log.split('\n')[0]
-                    self.repo.git.checkout('-f', oid)
-                    files = fork.get_changed_files()
-                    print(files)
-                    av, max, total = get_cyclomatic_complexity(files)
-                    if 0 == max:
-                        continue
 
-                    complexity_av.append(av)
-                    complexity_max.append(max)
-                    complexity_total.append(total)
-                except TabError as e:
-                    print(e)
-                except SyntaxError as e:
-                    print(e)
-                except git.exc.GitCommandError as e:
-                    print(e)
-                else:
-                    times.append(time)
-                    urls.append(url)
+        repo_thread.join()
+        print('starting analysis')
+        for issue in issues:
+            try:
+                av, m, total = issue.get_related_fork().calculate_complexity()
+                complexity_av.append(av)
+                complexity_max.append(m)
+                complexity_total.append(total)
+                times.append(issue.fix_time)
+                urls.append(issue.get_related_fork().url)
+                print(f'{len(urls)} out of {len(issues)} issues found')
+            except TabError as e:
+                print(e)
+            except SyntaxError as e:
+                print(e)
+            except git.exc.GitCommandError as e:
+                print(e)
 
         df = DataFrame({'time': times, 'url': urls,
                         'average complexity': complexity_av, 'max complexity': complexity_max,
