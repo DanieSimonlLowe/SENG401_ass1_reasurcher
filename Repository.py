@@ -180,6 +180,9 @@ class Repository:
                 print(e)
             except git.exc.GitCommandError as e:
                 print(e)
+            except TimeoutError as e:
+                print('timed out')
+                break
         return times, urls, urls2, complexity_av, complexity_max, complexity_total, complexity_over
 
     def create_commit_file(self, aim_count, name):
