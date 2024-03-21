@@ -47,7 +47,7 @@ class Repository:
         after = ""
         if self.end_cursor is not None:
             after = f", after: \"{self.end_cursor}\""
-
+        #, labels: [\"""" + self.bug_tag + """\"]
         query = """query {
                         repository(owner: \"""" + self.owner + """\", name: \"""" + self.name + """\") {
                             issues(states: [CLOSED], first: """ + str(
@@ -118,7 +118,6 @@ class Repository:
             self.end_cursor = json['data']['repository']['issues']['pageInfo']['endCursor']
             self.has_next_page = json['data']['repository']['issues']['pageInfo']['hasNextPage']
 
-            print('new json generated')
             return issues
         except TypeError as e:
             if timeout > 15:
@@ -197,6 +196,8 @@ class Repository:
             except TimeoutError as e:
                 print('timed out')
                 break
+            except Exception as e:
+                print(e)
         return times, urls, urls2, complexity_av, complexity_max, complexity_total, complexity_over
 
     def create_commit_file(self, aim_count, name, trys):
