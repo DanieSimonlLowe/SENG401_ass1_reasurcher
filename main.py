@@ -14,6 +14,6 @@ rep = Repository('pytorch', 'pytorch', "")
 
 print('repo created')
 
-rep.create_commit_file(10, "text.csv", )
+rep.create_commit_file(50, "text.csv", )
 
 # rep.create_commit_file("text.csv", 'out.csv')

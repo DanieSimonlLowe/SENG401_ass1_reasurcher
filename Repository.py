@@ -125,12 +125,12 @@ class Repository:
                 self.has_next_page = False
             print('slept')
             sleep(120)
-            return self.get_issues_json(timeout+1)
+            return self.get_issues_json(timeout + 1)
 
     def get_random_issues(self, aim_count):
         look = 0
         issues = []
-        json = self.get_issues_json()
+        json = []
 
         while len(issues) < aim_count:
             if look >= len(json):
@@ -197,11 +197,11 @@ class Repository:
         complexity_over = []
 
         try_count = 1
-        while len(times) < aim_count and try_count < 10:
+        while len(times) < aim_count and try_count < 20:
             print(f'retrival try {try_count}')
             try_count += 1
             o_times, o_urls, o_urls2, o_complexity_av, o_complexity_max, o_complexity_total, o_complexity_over = (
-                self.create_commit_file_helper(aim_count - len(times), repo_thread))
+                self.create_commit_file_helper(max(50, aim_count), repo_thread))
             times += o_times
             urls += o_urls
             urls2 += o_urls2
