@@ -1,5 +1,5 @@
 import os
-import random
+import psutil
 from time import sleep
 import threading
 
@@ -197,11 +197,12 @@ class Repository:
         complexity_over = []
 
         try_count = 1
-        while len(times) < aim_count and try_count < 20:
+        startmem = psutil.virtual_memory().available
+        while len(times) < aim_count and try_count < 20 and psutil.virtual_memory().available > startmem/8:
             print(f'retrival try {try_count}')
             try_count += 1
             o_times, o_urls, o_urls2, o_complexity_av, o_complexity_max, o_complexity_total, o_complexity_over = (
-                self.create_commit_file_helper(max(50, aim_count), repo_thread))
+                self.create_commit_file_helper(min(max(50, aim_count), 200), repo_thread))
             times += o_times
             urls += o_urls
             urls2 += o_urls2
