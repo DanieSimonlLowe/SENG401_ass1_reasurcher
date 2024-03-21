@@ -27,6 +27,9 @@ class Issue:
             return self.fork
 
         for node in self.json_data['timelineItems']['nodes']:
+            if 'stateReason' in node:
+                continue
+            
             if 'id' in node and 'source' in node and 'commits' in node['source']:
                 self.fork = Fork(node, self.repository, self)
                 if self.fork.is_valid():

@@ -10,10 +10,9 @@ from Repository import Repository
 # scrapy: bug
 # ---------------------------------
 
-rep = Repository('numpy', 'numpy', "00 - Bug")
+rep = Repository('pytorch', 'pytorch', "type:bug")
 
-print('repo created')
+print('repo created 1')
 
-rep.create_commit_file(100000, "text.csv", 200)
+rep.create_commit_file(99999999999, "pytorch.csv", 999999999)
 
-# rep.create_commit_file("text.csv", 'out.csv')

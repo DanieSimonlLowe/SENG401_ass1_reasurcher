@@ -51,7 +51,7 @@ class Repository:
         query = """query {
                         repository(owner: \"""" + self.owner + """\", name: \"""" + self.name + """\") {
                             issues(states: [CLOSED], first: """ + str(
-            ISSUE_COUNT) + after + """, labels: [\"""" + self.bug_tag + """\"]) {
+            ISSUE_COUNT) + after + """) {
                                 edges {
                                     node {
                                         id
@@ -120,12 +120,24 @@ class Repository:
 
             print('new json generated')
             return issues
+        except TypeError as e:
+            if timeout > 15:
+                self.has_next_page = False
+            print('slept')
+            sleep(120)
+            return self.get_issues_json(timeout + 1)            
         except KeyError as e:
             if timeout > 15:
                 self.has_next_page = False
             print('slept')
             sleep(120)
             return self.get_issues_json(timeout + 1)
+        except Exception as e:
+            if timeout > 15:
+                self.has_next_page = False
+            print('slept')
+            sleep(120)
+            return self.get_issues_json(timeout + 1)            
 
     def get_random_issues(self, aim_count):
         look = 0
@@ -180,6 +192,8 @@ class Repository:
                 print(e)
             except git.exc.GitCommandError as e:
                 print(e)
+            except UnicodeDecodeError as e:
+                print(e)
             except TimeoutError as e:
                 print('timed out')
                 break
@@ -198,7 +212,7 @@ class Repository:
 
         try_count = 1
         startmem = psutil.virtual_memory().available
-        while len(times) < aim_count and try_count < trys and psutil.virtual_memory().available > startmem/8:
+        while len(times) < aim_count and try_count < trys and psutil.virtual_memory().available > startmem/8 and self.has_next_page:
             print(f'retrival try {try_count}')
             try_count += 1
             o_times, o_urls, o_urls2, o_complexity_av, o_complexity_max, o_complexity_total, o_complexity_over = (

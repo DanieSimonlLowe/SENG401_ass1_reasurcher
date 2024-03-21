@@ -107,7 +107,6 @@ class Fork:
         self.repository.repo.git.checkout('-f', oid)
 
         files = self.get_changed_files()
-        print(files)
         return get_cyclomatic_complexity(files)
 
     def is_valid(self):
