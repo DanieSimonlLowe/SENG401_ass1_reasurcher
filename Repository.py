@@ -51,7 +51,7 @@ class Repository:
         query = """query {
                         repository(owner: \"""" + self.owner + """\", name: \"""" + self.name + """\") {
                             issues(states: [CLOSED], first: """ + str(
-            ISSUE_COUNT) + after + """) {
+            ISSUE_COUNT) + after + """, labels: [\"""" + self.bug_tag + """\"]) {
                                 edges {
                                     node {
                                         id
