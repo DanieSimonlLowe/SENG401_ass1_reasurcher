@@ -14,6 +14,6 @@ rep = Repository('numpy', 'numpy', "")
 
 print('repo created')
 
-rep.create_commit_file(500, "text.csv", )
+rep.create_commit_file(10, "text.csv", )
 
 # rep.create_commit_file("text.csv", 'out.csv')

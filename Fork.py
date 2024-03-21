@@ -14,6 +14,7 @@ PYTHON_FILE_EXTENSIONS = {
     'py', 'pyc', 'pyo', 'pycpp', 'pyi', 'pyd', 'pyw', 'pyz'
 }
 
+
 class Fork:
     def __init__(self, json, repository, issue):
         # add fork validilty check
@@ -31,13 +32,26 @@ class Fork:
         self.state = json['source']['state']
         # self.files_thread = threading.Thread(target=Fork.set_files, args=(self,))
 
+    def parse_diff(self, diff_text):
+        funcs = set()
+        current_file = None
+        for line in diff_text.split('\n'):
+
+            # Check if the line indicates a function change in the hunk header
+            if line.startswith('@@') and 'def ' in line:
+                # Extract the function name
+                function_name = line[line.index('def '):].split('(')[0].replace('def ', '').strip()
+                funcs.add(function_name)
+
+        return funcs
+
     def set_file(self, oid, out, count=0):
         text = f"{BASE_URL}repos/{self.owner}/{self.repo}/commits/{oid}"
         req = requests.get(text,
-                            headers={
-                                'Authorization': f'bearer {TOKEN}',
-                            },
-                            )
+                           headers={
+                               'Authorization': f'bearer {TOKEN}',
+                           },
+                           )
         json = req.json()
         if 'files' not in json:
             print(json)
@@ -45,19 +59,23 @@ class Fork:
                 raise TimeoutError(f'Timed out waiting for {text}')
             print('slept')
             time.sleep(120)
-            return self.set_file(oid, out, count+1)
-
+            return self.set_file(oid, out, count + 1)
         for file in json['files']:
-            filename = file['filename']
-            extension = filename.split('.')[-1]
-            if extension in PYTHON_FILE_EXTENSIONS:
-                path = os.path.join(self.repository.path,filename)
-                if os.path.exists(path):
-                    out.add(path)
+            if 'filename' not in file or 'patch' not in file:
+                continue
+            current_file = file['filename']
+            path = os.path.join(self.repository.path, current_file)
+            if os.path.exists(path):
+                patch = self.parse_diff(file['patch'])
+                if path in out:
+                    for func in patch:
+                        out[path].add(func)
+                else:
+                    out[path] = patch
 
     def get_changed_files(self):
         threads = []
-        out = set()
+        out = dict()
         for node in self.commits_json:
             oid = node['node']['commit']['oid']
             thread = threading.Thread(target=Fork.set_file, args=(self, oid, out))
