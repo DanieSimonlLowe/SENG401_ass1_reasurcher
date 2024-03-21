@@ -31,6 +31,12 @@ print(spearmanr(times, avs))
 print(spearmanr(times, maxs))
 print(spearmanr(times, totals))
 
+ranks = np.arange(1, len(avs) + 1)
+correlation_curve = [spearmanr(avs[:i], times[:i])[0] for i in ranks]
+
+# Plot Spearman correlation curve
+plt.plot(ranks, correlation_curve, marker='o')
+
 plt.title(f'Average Cyclomatic Complexity vs Time For {name}')
 
 plt.ylabel("Time (hours)")

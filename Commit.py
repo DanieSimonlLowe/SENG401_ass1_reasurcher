@@ -18,17 +18,18 @@ def get_cyclomatic_complexity(files):
     count = 0
     max = 0
     lines = 0
-    for file in files:
+    for file, funcs in files.items():
         try:
             with open(file, 'r') as f:
                 text = f.read()
                 lines += text.count('\n')
                 vistor = ComplexityVisitor.from_code(text, no_assert=True)
-                for function in vistor.blocks:
-                    complexity += function.complexity
-                    if function.complexity > max:
-                        max = function.complexity
-                    count += 1
+                for function in vistor.functions:
+                    if function.name in funcs:
+                        complexity += function.complexity
+                        if function.complexity > max:
+                            max = function.complexity
+                        count += 1
 
         except FileNotFoundError:
             pass
