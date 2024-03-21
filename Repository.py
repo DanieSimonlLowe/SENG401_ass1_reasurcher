@@ -185,7 +185,7 @@ class Repository:
                 break
         return times, urls, urls2, complexity_av, complexity_max, complexity_total, complexity_over
 
-    def create_commit_file(self, aim_count, name):
+    def create_commit_file(self, aim_count, name, trys):
         repo_thread = threading.Thread(target=Repository.set_repo, args=(self,))
         repo_thread.start()
         times = []
@@ -198,7 +198,7 @@ class Repository:
 
         try_count = 1
         startmem = psutil.virtual_memory().available
-        while len(times) < aim_count and try_count < 20 and psutil.virtual_memory().available > startmem/8:
+        while len(times) < aim_count and try_count < trys and psutil.virtual_memory().available > startmem/8:
             print(f'retrival try {try_count}')
             try_count += 1
             o_times, o_urls, o_urls2, o_complexity_av, o_complexity_max, o_complexity_total, o_complexity_over = (
