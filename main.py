@@ -10,7 +10,7 @@ from Repository import Repository
 # scrapy: bug
 # ---------------------------------
 
-rep = Repository('numpy', 'numpy', "")
+rep = Repository('pytorch', 'pytorch', "")
 
 print('repo created')
 
