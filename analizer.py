@@ -3,13 +3,18 @@ import os
 from copy import copy
 from random import randint
 
+import numpy
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import spearmanr
 from scipy import stats
 
 def trimmed(arr, percent=10):
-    pass
+    trim_count = int(len(arr) * percent / 100)
+    sorted_arr = arr[arr[:,0].argsort()]
+    trimmed_arr = sorted_arr[trim_count:-trim_count]
+#    if you want to trim the time too sort by arr[:,1] and trimm it again.
+    return trimmed_arr
 
 
 def get_file_data(file_name, shuffle):
@@ -20,6 +25,8 @@ def get_file_data(file_name, shuffle):
     maxs = []
     totals = []
     ratios = []
+
+    dt = numpy.dtype([('data', float), ('times', float)])
 
     for line in file:
         if line[0] == 't':
@@ -43,16 +50,16 @@ def get_file_data(file_name, shuffle):
         np.random.shuffle(times)
 
     avt = np.array([avs, copy(times)]).transpose()
-    avt = trimmed(avt, 0.1)
+    avt = trimmed(avt, 10)
 
     maxst = np.array([maxs, copy(times)]).transpose()
-    maxst = trimmed(maxst, 0.1)
+    maxst = trimmed(maxst, 10)
 
     totalst = np.array([totals, copy(times)]).transpose()
-    totalst = trimmed(totalst, 0.1)
+    totalst = trimmed(totalst, 10)
 
     ratiost = np.array([ratios, copy(times)]).transpose()
-    ratiost = trimmed(ratiost, 0.1)
+    ratiost = trimmed(ratiost, 10)
 
     return avt, maxst, totalst, ratiost
 
