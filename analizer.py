@@ -2,14 +2,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import spearmanr
 
-name = "test"
+name = "numpy"
 
-file = open('text.csv')
+file = open('numpy.csv')
 
 times = []
 avs = []
 maxs = []
 totals = []
+ratios = []
 
 for line in file:
     if line[0] == 't':
@@ -19,30 +20,35 @@ for line in file:
     avs.append(float(sections[3]))
     maxs.append(float(sections[4]))
     totals.append(float(sections[5].strip()))
+    ratios.append(float(sections[6].strip()))
 
 times = np.array(times)
 avs = np.array(avs)
 maxs = np.array(maxs)
 totals = np.array(totals)
+ratios = np.array(ratios)
 
 times = times / 3.6e+6
 
 print(spearmanr(times, avs))
 print(spearmanr(times, maxs))
 print(spearmanr(times, totals))
+print(spearmanr(times, ratios))
 
-ranks = np.arange(1, len(avs) + 1)
-correlation_curve = [spearmanr(avs[:i], times[:i])[0] for i in ranks]
 
-# Plot Spearman correlation curve
-plt.plot(ranks, correlation_curve, marker='o')
+def plot(values, vname):
+    plt.title(f'{vname} vs Time For {name}')
 
-plt.title(f'Average Cyclomatic Complexity vs Time For {name}')
+    plt.ylabel("Time (hours)")
+    plt.xlabel(vname)
+    plt.scatter(values, times)
+    plt.show()
 
-plt.ylabel("Time (hours)")
-plt.xlabel("Average Cyclomatic Complexity")
-plt.scatter(avs, times)
-plt.show()
-# plt.scatter(times, maxs)
-# plt.scatter(times, totals)
-# plt.show()
+
+plot(avs, 'average cyclomatic complexity')
+
+plot(maxs, 'max cyclomatic complexity')
+
+plot(totals, 'total cyclomatic complexity')
+
+plot(ratios, 'total cyclomatic complexity over lines of code.')
