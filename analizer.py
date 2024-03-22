@@ -1,9 +1,13 @@
+import glob
+import os
+from random import randint
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import spearmanr
 
 
-def get_file_data(file_name):
+def get_file_data(file_name, shuffle):
     file = open(file_name)
 
     times = []
@@ -30,12 +34,15 @@ def get_file_data(file_name):
 
     times = times / 3.6e+6
 
-    return avs, maxs, totals, ratios, times
+    if shuffle:
+        np.random.shuffle(times)
 
+    return avs, maxs, totals, ratios, times
 
 
 VALUE_NAMES = ['Average Cyclomatic Complexity', 'Max Cyclomatic Complexity',
                'Total Cyclomatic Complexity', 'Total Cyclomatic Complexity Over Lines of Code']
+
 
 def spear_all(inputs):
     out = {}
@@ -54,11 +61,12 @@ def spear_all(inputs):
             print(name, VALUE_NAMES[i])
             print(spearmanr(times, values))
 
+
 # input = (file, name)
-def plot_all(inputs):
+def plot_all(inputs, base='base', shuffle=False):
     data = []
     for file, name in inputs:
-        avs, maxs, totals, ratios, times = get_file_data(file)
+        avs, maxs, totals, ratios, times = get_file_data(file, shuffle)
         data.append((name, times, (avs, maxs, totals, ratios)))
 
     for i in range(4):
@@ -68,10 +76,12 @@ def plot_all(inputs):
         plt.xlabel(VALUE_NAMES[i])
         for name, times, array in data:
             values = array[i]
+            # plt.hist2d(values, times, label=name)
             plt.scatter(values, times, label=name)
         plt.legend(loc="upper right")
-        plt.savefig(f"file_{i}.png")
-        plt.show()
+        plt.savefig(f"{base}_file_{i}.png")
+        plt.clf()
+        # plt.show()
 
 
 # plot(avs, 'average cyclomatic complexity')
@@ -82,5 +92,21 @@ def plot_all(inputs):
 #
 # plot(ratios, 'total cyclomatic complexity over lines of code.')
 
-plot_all([('numpy.csv', 'numpy'), ('tensorflow.csv', 'tensorflow'),
-          ('pytorch.csv', 'pytorch')])
+
+def lineup(inputs, count):
+    files = glob.glob('lineup/*')
+    for f in files:
+        os.remove(f)
+    for i in range(count):
+
+        num = randint(0, 999999999)
+        plot_all(inputs, f'lineup/{num}', shuffle=True)
+    num = randint(0, 999999999)
+    plot_all(inputs, f'lineup/{num}', shuffle=False)
+    f = open("answer.txt", "w")
+    f.write(str(num))
+    f.close()
+
+
+lineup([('numpy.csv', 'numpy'), ('tensorflow.csv', 'tensorflow'),
+        ('pytorch.csv', 'pytorch')], 4)
