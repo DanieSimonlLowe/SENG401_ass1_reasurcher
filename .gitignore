@@ -2,3 +2,6 @@
 .env
 holder/
 /venv
+answer.txt
+*.csv
+*.png

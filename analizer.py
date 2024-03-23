@@ -44,7 +44,7 @@ def get_file_data(file_name, shuffle):
     totals = np.array(totals)
     ratios = np.array(ratios)
 
-    times = times / 3.6e+6
+    times = times / 3600
 
     if shuffle:
         np.random.shuffle(times)
@@ -103,19 +103,9 @@ def plot_all(inputs, base='base', shuffle=False):
             # plt.hist2d(values, times, label=name)
             plt.scatter(values[0], values[1], label=name)
         plt.legend(loc="upper right")
-        plt.savefig(f"{base}_file_{i}.png")
-        plt.clf()
-        # plt.show()
-
-
-# plot(avs, 'average cyclomatic complexity')
-#
-# plot(maxs, 'max cyclomatic complexity')
-#
-# plot(totals, 'total cyclomatic complexity')
-#
-# plot(ratios, 'total cyclomatic complexity over lines of code.')
-
+        # plt.savefig(f"{base}_file_{i}.png")
+        # plt.clf()
+        plt.show()
 
 def lineup(inputs, count):
     files = glob.glob('lineup/*')
@@ -131,6 +121,10 @@ def lineup(inputs, count):
     f.close()
     print('done')
 
+inputs = [('numpy.csv', 'numpy'), ('tensorflow.csv', 'tensorflow'),
+        ('pytorch.csv', 'pytorch')]
+input1 = [('tensorflow.csv', 'tensorflow')]
+input2 = [('numpy.csv', 'numpy')]
 
-lineup([('numpy.csv', 'numpy'), ('tensorflow.csv', 'tensorflow'),
-        ('pytorch.csv', 'pytorch')], 4)
+plot_all(input1)
+# lineup(inputs, 4)
