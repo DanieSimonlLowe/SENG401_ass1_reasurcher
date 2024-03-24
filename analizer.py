@@ -1,19 +1,24 @@
 import glob
 import os
+import statistics
 from copy import copy
 from random import randint
 
-import numpy
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import spearmanr
-from scipy import stats
 
 def trimmed(arr, percent=10):
-    trim_count = int(len(arr) * percent / 100)
+    condition = arr[:, 1] >= 0.00278
+    arr = arr[condition]
+    print("post invalid= " + str(len(arr)))
+
+    trim_count = int((len(arr) * percent / 100)/2)
+    print("trimmed" + str(trim_count))
     sorted_arr = arr[arr[:,0].argsort()]
     trimmed_arr = sorted_arr[trim_count:-trim_count]
-#    if you want to trim the time too sort by arr[:,1] and trimm it again.
+
+
     return trimmed_arr
 
 
@@ -26,8 +31,6 @@ def get_file_data(file_name, shuffle):
     totals = []
     ratios = []
 
-    dt = numpy.dtype([('data', float), ('times', float)])
-
     for line in file:
         if line[0] == 't':
             continue
@@ -37,7 +40,20 @@ def get_file_data(file_name, shuffle):
         maxs.append(float(sections[4]))
         totals.append(float(sections[5].strip()))
         ratios.append(float(sections[6].strip()))
+    print(file_name)
+    print("Average fix time:" + str(statistics.fmean(times)))
+    print("Average av complexity:" + str(statistics.fmean(avs)))
+    print("Average max complexity:" + str(statistics.fmean(maxs)))
+    print("Average total complexity:" + str(statistics.fmean(totals)))
+    print("Min time:" + str(min(times)))
 
+    count = 0
+    i = 0
+    while i < len(times):
+        if avs[i] == maxs[i] == totals[i]:
+            count +=1
+        i+=1
+    print(count)
     times = np.array(times)
     avs = np.array(avs)
     maxs = np.array(maxs)
@@ -49,8 +65,10 @@ def get_file_data(file_name, shuffle):
     if shuffle:
         np.random.shuffle(times)
 
+    print("precount" + str(len(avs)))
     avt = np.array([avs, copy(times)]).transpose()
     avt = trimmed(avt, 10)
+    print("postcount" + str(len(avt)))
 
     maxst = np.array([maxs, copy(times)]).transpose()
     maxst = trimmed(maxst, 10)
