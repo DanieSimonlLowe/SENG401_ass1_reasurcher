@@ -94,16 +94,16 @@ def plot_all(inputs, base='base', shuffle=False):
         data.append((name, array))
 
     for i in range(4):
-        plt.figure(figsize=(10, 10))
+        plt.figure(figsize=(15, 20))
         plt.title(f'{VALUE_NAMES[i]} vs Time')
-        plt.ylabel("Time (hours)")
-        plt.xlabel(VALUE_NAMES[i])
+        plt.ylabel("Time (hours)", fontsize=15)
+        plt.xlabel(VALUE_NAMES[i], fontsize=15)
         for name, array in data:
             values = array[i].transpose()
             # plt.hist2d(values, times, label=name)
-            plt.scatter(values[0], values[1], label=name)
+            plt.scatter(values[0], values[1], label=name, s=5)
         plt.legend(loc="upper right")
-        # plt.savefig(f"{base}_file_{i}.png")
+        plt.savefig(f"{base}_file_{i}.png")
         # plt.clf()
         plt.show()
 
@@ -126,5 +126,5 @@ inputs = [('numpy.csv', 'numpy'), ('tensorflow.csv', 'tensorflow'),
 input1 = [('tensorflow.csv', 'tensorflow')]
 input2 = [('numpy.csv', 'numpy')]
 
-plot_all(input1)
+plot_all(inputs)
 # lineup(inputs, 4)
