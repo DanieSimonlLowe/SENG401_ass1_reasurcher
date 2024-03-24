@@ -113,7 +113,7 @@ def plot_all(inputs, base='base', shuffle=False):
         data.append((name, array))
 
     for i in range(4):
-        plt.figure(figsize=(15, 20))
+        plt.figure(figsize=(15, 10))
         plt.title(f'{VALUE_NAMES[i]} vs Time')
         plt.ylabel("Time (hours)", fontsize=15)
         plt.xlabel(VALUE_NAMES[i], fontsize=15)
@@ -144,9 +144,9 @@ inputs = [('numpy.csv', 'numpy'), ('tensorflow.csv', 'tensorflow'),
         ('pytorch.csv', 'pytorch')]
 input1 = [('tensorflow.csv', 'tensorflow')]
 input2 = [('numpy.csv', 'numpy')]
-input3 = [('pytor.csv', 'numpy')]
+input3 = [('pytorch.csv', 'pytorch')]
 
-plot_all(input1)
-plot_all(input2)
-plot_all(input3)
+plot_all(input1, 'tensorflow')
+plot_all(input2, 'numpy')
+plot_all(input3, 'pytorch')
 # lineup(inputs, 4)
