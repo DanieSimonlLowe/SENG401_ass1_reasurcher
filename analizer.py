@@ -17,8 +17,7 @@ def trimmed(arr, percent=10):
     print("trimmed" + str(trim_count))
     sorted_arr = arr[arr[:,0].argsort()]
     trimmed_arr = sorted_arr[trim_count:-trim_count]
-
-
+#    if you want to trim the time too sort by arr[:,1] and trimm it again.
     return trimmed_arr
 
 
