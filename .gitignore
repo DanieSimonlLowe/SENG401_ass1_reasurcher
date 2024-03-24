@@ -5,3 +5,4 @@ holder/
 answer.txt
 *.csv
 *.png
+.env
