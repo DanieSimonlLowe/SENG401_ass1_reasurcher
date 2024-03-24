@@ -13,11 +13,13 @@ def trimmed(arr, percent=10):
     arr = arr[condition]
     print("post invalid= " + str(len(arr)))
 
-    trim_count = int((len(arr) * percent / 100)/2)
+    trim_count = int((len(arr) * percent / 100)/4)
     print("trimmed" + str(trim_count))
     sorted_arr = arr[arr[:,0].argsort()]
     trimmed_arr = sorted_arr[trim_count:-trim_count]
 #    if you want to trim the time too sort by arr[:,1] and trimm it again.
+    sorted_arr = trimmed_arr[trimmed_arr[:,1].argsort()]
+    trimmed_arr = sorted_arr[trim_count:-trim_count]
     return trimmed_arr
 
 
@@ -142,6 +144,9 @@ inputs = [('numpy.csv', 'numpy'), ('tensorflow.csv', 'tensorflow'),
         ('pytorch.csv', 'pytorch')]
 input1 = [('tensorflow.csv', 'tensorflow')]
 input2 = [('numpy.csv', 'numpy')]
+input3 = [('pytor.csv', 'numpy')]
 
-plot_all(inputs)
+plot_all(input1)
+plot_all(input2)
+plot_all(input3)
 # lineup(inputs, 4)
