@@ -1,7 +1,8 @@
 /__pycache__
-.env
+../SENG401_ass1_reasurcher2/.env
 holder/
 /venv
 answer.txt
 *.csv
 *.png
+.env

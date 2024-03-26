@@ -6,14 +6,21 @@ from random import randint
 import numpy
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.stats import spearmanr, kendalltau
+from scipy.stats import spearmanr
 from scipy import stats
 
 def trimmed(arr, percent=10):
-    trim_count = int(len(arr) * percent / 100)
+    condition = arr[:, 1] >= 0.00278
+    arr = arr[condition]
+    print("post invalid= " + str(len(arr)))
+
+    trim_count = int((len(arr) * percent / 100)/4)
+    print("trimmed" + str(trim_count))
     sorted_arr = arr[arr[:,0].argsort()]
     trimmed_arr = sorted_arr[trim_count:-trim_count]
 #    if you want to trim the time too sort by arr[:,1] and trimm it again.
+    sorted_arr = trimmed_arr[trimmed_arr[:,1].argsort()]
+    trimmed_arr = sorted_arr[trim_count:-trim_count]
     return trimmed_arr
 
 
@@ -26,8 +33,6 @@ def get_file_data(file_name, shuffle=False):
     totals = []
     ratios = []
 
-    dt = numpy.dtype([('data', float), ('times', float)])
-
     for line in file:
         if line[0] == 't':
             continue
@@ -37,7 +42,20 @@ def get_file_data(file_name, shuffle=False):
         maxs.append(float(sections[4]))
         totals.append(float(sections[5].strip()))
         ratios.append(float(sections[6].strip()))
+    print(file_name)
+    print("Average fix time:" + str(statistics.fmean(times)))
+    print("Average av complexity:" + str(statistics.fmean(avs)))
+    print("Average max complexity:" + str(statistics.fmean(maxs)))
+    print("Average total complexity:" + str(statistics.fmean(totals)))
+    print("Min time:" + str(min(times)))
 
+    count = 0
+    i = 0
+    while i < len(times):
+        if avs[i] == maxs[i] == totals[i]:
+            count +=1
+        i+=1
+    print(count)
     times = np.array(times)
     avs = np.array(avs)
     maxs = np.array(maxs)
@@ -49,8 +67,10 @@ def get_file_data(file_name, shuffle=False):
     if shuffle:
         np.random.shuffle(times)
 
+    print("precount" + str(len(avs)))
     avt = np.array([avs, copy(times)]).transpose()
     avt = trimmed(avt, 10)
+    print("postcount" + str(len(avt)))
 
     maxst = np.array([maxs, copy(times)]).transpose()
     maxst = trimmed(maxst, 10)
@@ -101,7 +121,7 @@ def plot_all(inputs, base='base', shuffle=False):
         data.append((name, array))
 
     for i in range(4):
-        plt.figure(figsize=(15, 20))
+        plt.figure(figsize=(15, 10))
         plt.title(f'{VALUE_NAMES[i]} vs Time')
         plt.ylabel("Time (hours)", fontsize=15)
         plt.xlabel(VALUE_NAMES[i], fontsize=15)
@@ -132,6 +152,9 @@ inputs = [('numpy.csv', 'numpy'), ('tensorflow.csv', 'tensorflow'),
         ('pytorch.csv', 'pytorch')]
 input1 = [('tensorflow.csv', 'tensorflow')]
 input2 = [('numpy.csv', 'numpy')]
+input3 = [('pytorch.csv', 'pytorch')]
 
-get_stats(inputs)
+plot_all(input1, 'tensorflow')
+plot_all(input2, 'numpy')
+plot_all(input3, 'pytorch')
 # lineup(inputs, 4)
