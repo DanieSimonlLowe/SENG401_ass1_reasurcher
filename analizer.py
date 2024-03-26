@@ -1,13 +1,11 @@
 import glob
 import os
+import statistics
 from copy import copy
 from random import randint
-
-import numpy
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import spearmanr
-from scipy import stats
 
 def trimmed(arr, percent=10):
     condition = arr[:, 1] >= 0.00278
@@ -49,6 +47,7 @@ def get_file_data(file_name, shuffle=False):
     print("Average total complexity:" + str(statistics.fmean(totals)))
     print("Min time:" + str(min(times)))
 
+
     count = 0
     i = 0
     while i < len(times):
@@ -62,8 +61,8 @@ def get_file_data(file_name, shuffle=False):
     totals = np.array(totals)
     ratios = np.array(ratios)
 
-    times = times / 3600
-
+    times = times / (24 * 3600)
+    print("median times:" + str(statistics.median(times)))
     if shuffle:
         np.random.shuffle(times)
 
@@ -123,7 +122,7 @@ def plot_all(inputs, base='base', shuffle=False):
     for i in range(4):
         plt.figure(figsize=(15, 10))
         plt.title(f'{VALUE_NAMES[i]} vs Time')
-        plt.ylabel("Time (hours)", fontsize=15)
+        plt.ylabel("Time (days)", fontsize=15)
         plt.xlabel(VALUE_NAMES[i], fontsize=15)
         for name, array in data:
             values = array[i].transpose()
