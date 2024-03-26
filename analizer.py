@@ -6,7 +6,7 @@ from random import randint
 import numpy
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.stats import spearmanr
+from scipy.stats import spearmanr, kendalltau
 from scipy import stats
 
 def trimmed(arr, percent=10):
@@ -17,7 +17,7 @@ def trimmed(arr, percent=10):
     return trimmed_arr
 
 
-def get_file_data(file_name, shuffle):
+def get_file_data(file_name, shuffle=False):
     file = open(file_name)
 
     times = []
@@ -68,7 +68,7 @@ VALUE_NAMES = ['Average Cyclomatic Complexity', 'Max Cyclomatic Complexity',
                'Total Cyclomatic Complexity', 'Total Cyclomatic Complexity Over Lines of Code']
 
 
-def spear_all(inputs):
+def func_all(inputs, func):
     out = {}
     left = []
     for name in VALUE_NAMES:
@@ -77,13 +77,20 @@ def spear_all(inputs):
 
     data = []
     for file, name in inputs:
-        avs, maxs, totals, ratios, times = get_file_data(file)
-        data.append((name, times, (avs, maxs, totals, ratios)))
+        values = get_file_data(file, shuffle=False)
+        data.append((name, values))
     for i in range(4):
-        for name, times, array in data:
-            values = array[i]
+        for name, array in data:
+            values = array[i].transpose()
             print(name, VALUE_NAMES[i])
-            print(spearmanr(times, values))
+            print(func(values[0], values[1]))
+            # if func(values[0], values[1]).pvalue >= 0.95:
+            #     return True
+
+def get_stats(inputs):
+    func_all(inputs, kendalltau)
+    func_all(inputs, spearmanr)
+
 
 
 # input = (file, name)
@@ -126,5 +133,5 @@ inputs = [('numpy.csv', 'numpy'), ('tensorflow.csv', 'tensorflow'),
 input1 = [('tensorflow.csv', 'tensorflow')]
 input2 = [('numpy.csv', 'numpy')]
 
-plot_all(inputs)
+get_stats(inputs)
 # lineup(inputs, 4)
