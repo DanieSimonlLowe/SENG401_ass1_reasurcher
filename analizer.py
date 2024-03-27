@@ -7,17 +7,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import spearmanr
 
+
 def trimmed(arr, percent=10):
     condition = arr[:, 1] >= 0.00278
     arr = arr[condition]
     print("post invalid= " + str(len(arr)))
 
-    trim_count = int((len(arr) * percent / 100)/4)
+    trim_count = int((len(arr) * percent / 100) / 4)
     print("trimmed" + str(trim_count))
-    sorted_arr = arr[arr[:,0].argsort()]
+    sorted_arr = arr[arr[:, 0].argsort()]
     trimmed_arr = sorted_arr[trim_count:-trim_count]
-#    if you want to trim the time too sort by arr[:,1] and trimm it again.
-    sorted_arr = trimmed_arr[trimmed_arr[:,1].argsort()]
+    #    if you want to trim the time too sort by arr[:,1] and trimm it again.
+    sorted_arr = trimmed_arr[trimmed_arr[:, 1].argsort()]
     trimmed_arr = sorted_arr[trim_count:-trim_count]
     return trimmed_arr
 
@@ -47,13 +48,12 @@ def get_file_data(file_name, shuffle=False):
     print("Average total complexity:" + str(statistics.fmean(totals)))
     print("Min time:" + str(min(times)))
 
-
     count = 0
     i = 0
     while i < len(times):
         if avs[i] == maxs[i] == totals[i]:
-            count +=1
-        i+=1
+            count += 1
+        i += 1
     print(count)
     times = np.array(times)
     avs = np.array(avs)
@@ -106,10 +106,10 @@ def func_all(inputs, func):
             # if func(values[0], values[1]).pvalue >= 0.95:
             #     return True
 
+
 def get_stats(inputs):
     func_all(inputs, kendalltau)
     func_all(inputs, spearmanr)
-
 
 
 # input = (file, name)
@@ -121,17 +121,18 @@ def plot_all(inputs, base='base', shuffle=False):
 
     for i in range(4):
         plt.figure(figsize=(15, 10))
-        plt.title(f'{VALUE_NAMES[i]} vs Time')
+        plt.title(f'{VALUE_NAMES[i]} vs Time for {base}')
         plt.ylabel("Time (days)", fontsize=15)
         plt.xlabel(VALUE_NAMES[i], fontsize=15)
         for name, array in data:
             values = array[i].transpose()
             # plt.hist2d(values, times, label=name)
-            plt.scatter(values[0], values[1], label=name, s=5)
-        plt.legend(loc="upper right")
+            plt.scatter(values[0], values[1], s=6)
+        # plt.legend(loc="upper right")
         plt.savefig(f"{base}_file_{i}.png")
         # plt.clf()
         plt.show()
+
 
 def lineup(inputs, count):
     files = glob.glob('lineup/*')
@@ -147,13 +148,14 @@ def lineup(inputs, count):
     f.close()
     print('done')
 
+
 inputs = [('numpy.csv', 'numpy'), ('tensorflow.csv', 'tensorflow'),
-        ('pytorch.csv', 'pytorch')]
+          ('pytorch.csv', 'pytorch')]
 input1 = [('tensorflow.csv', 'tensorflow')]
 input2 = [('numpy.csv', 'numpy')]
 input3 = [('pytorch.csv', 'pytorch')]
 
-plot_all(input1, 'tensorflow')
-plot_all(input2, 'numpy')
-plot_all(input3, 'pytorch')
+plot_all(input1, 'TensorFlow')
+plot_all(input2, 'NumPy')
+plot_all(input3, 'Pytorch')
 # lineup(inputs, 4)
